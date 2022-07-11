@@ -3,12 +3,8 @@
 # Generated on: 01/07/2022
 
 @{
-
-  # Script module or binary module file associated with this manifest.
   RootModule = '.\Gioxx.ToyBox.psm1'
-
-  # Version number of this module.
-  ModuleVersion = '0.1'
+  ModuleVersion = '0.2'
 
   # Supported PSEditions
   # CompatiblePSEditions = @()
@@ -57,8 +53,18 @@
   # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
   # NestedModules = @()
 
-  FunctionsToExport = @("MboxPermission","AddMboxPermission","RemoveMboxPermission")
-  CmdletsToExport = @("MboxPermission","AddMboxPermission","RemoveMboxPermission")
+  FunctionsToExport = @(
+    "AddMboxPermission",
+    "MboxPermission",
+    "QuarantineRelease",
+    "RemoveMboxPermission"
+  )
+  CmdletsToExport = @(
+    "AddMboxPermission",
+    "MboxPermission",
+    "QuarantineRelease",
+    "RemoveMboxPermission"
+  )
   VariablesToExport = '*' # Variables to export from this module
   AliasesToExport = @() # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 
