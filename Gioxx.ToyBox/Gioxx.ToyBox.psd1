@@ -4,7 +4,7 @@
 
 @{
   RootModule = '.\Gioxx.ToyBox.psm1'
-  ModuleVersion = '0.2'
+  ModuleVersion = '0.1'
 
   # Supported PSEditions
   # CompatiblePSEditions = @()
@@ -55,12 +55,14 @@
 
   FunctionsToExport = @(
     "AddMboxPermission",
+    "ConnectMSOnline",
     "MboxPermission",
     "QuarantineRelease",
     "RemoveMboxPermission"
   )
   CmdletsToExport = @(
     "AddMboxPermission",
+    "ConnectMSOnline",
     "MboxPermission",
     "QuarantineRelease",
     "RemoveMboxPermission"
@@ -95,7 +97,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview1'
+      Prerelease = 'Preview3'
 
       # Flag to indicate whether the module requires explicit user acceptance for install/update/save
       # RequireLicenseAcceptance = $false

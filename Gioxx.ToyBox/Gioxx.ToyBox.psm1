@@ -1,3 +1,10 @@
+# M365: connessioni ======================================================================================================================================================================
+
+function ConnectMSOnline {
+  Import-Module MSOnline -UseWindowsPowershell
+  Connect-MsolService
+}
+
 # Check ACL caselle di posta =============================================================================================================================================================
 
 function MboxPermission {
@@ -23,6 +30,8 @@ function RemoveMboxPermission {
   Remove-RecipientPermission $sourceMailbox -Trustee $_ -AccessRights SendAs -Confirm:$false
 }
 
+# M365: Protection =======================================================================================================================================================================
+
 function QuarantineRelease {
   param(
     [string] $senderAddress,
@@ -40,6 +49,7 @@ function QuarantineRelease {
 }
 
 Export-ModuleMember -Function AddMboxPermission
+Export-ModuleMember -Function ConnectMSOnline
 Export-ModuleMember -Function MboxPermission
 Export-ModuleMember -Function QuarantineRelease
 Export-ModuleMember -Function RemoveMboxPermission
