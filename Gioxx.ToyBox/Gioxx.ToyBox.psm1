@@ -1,50 +1,97 @@
 # M365: connessioni ======================================================================================================================================================================
 
 function ConnectMSOnline {
-  Import-Module MSOnline -UseWindowsPowershell
-  Connect-MsolService
+  #Import-Module MSOnline -UseWindowsPowershell
+  Import-Module MSOnline -SkipEditionCheck
+  Connect-MsolService | Out-Null
 }
 
-# Check ACL caselle di posta =============================================================================================================================================================
+# Check dettagli e ACL caselle di posta ==================================================================================================================================================
 
 function MboxPermission {
-  param( [string] $sourceMailbox )
-  Get-MailboxPermission -Identity $sourceMailbox | where {$_.user.tostring() -ne "NT AUTHORITY\SELF" -and $_.user.tostring() -NotLike "S-1-5*" -and $_.IsInherited -eq $false} | Select Identity,User,AccessRights
-  Get-RecipientPermission $sourceMailbox -AccessRights SendAs | where {$_.Trustee.tostring() -ne "NT AUTHORITY\SELF" -and $_.Trustee.tostring() -NotLike "S-1-5*"} | Select Identity,Trustee,AccessRights | Out-String
-  Get-Mailbox $sourceMailbox | Select -Expand GrantSendOnBehalfTo
+  param( [Parameter(Mandatory)][string] $SourceMailbox )
+  Get-MailboxPermission -Identity $SourceMailbox | Where-Object {$_.user.tostring() -ne "NT AUTHORITY\SELF" -and $_.user.tostring() -NotLike "S-1-5*" -and $_.IsInherited -eq $false} | Select-Object Identity,User,AccessRights
+  Get-RecipientPermission $SourceMailbox -AccessRights SendAs | Where-Object {$_.Trustee.tostring() -ne "NT AUTHORITY\SELF" -and $_.Trustee.tostring() -NotLike "S-1-5*"} | Select-Object Identity,Trustee,AccessRights | Out-String
+  Get-Mailbox $SourceMailbox | Select-Object -Expand GrantSendOnBehalfTo
+}
+
+function SmtpExpand {
+  param( [Parameter(Mandatory)][string] $SourceMailbox )
+  Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
 }
 
 # Modifica ACL caselle di posta ==========================================================================================================================================================
 
 function AddMboxPermission {
-  param( [string] $sourceMailbox )
-  Write-Host "Add $($_) on $($sourceMailbox) ..."
-  Add-MailboxPermission -Identity $sourceMailbox -User $_ -AccessRights FullAccess -Confirm:$false
-  Add-RecipientPermission $sourceMailbox -Trustee $_ -AccessRights SendAs -Confirm:$false
+  param(
+    [Parameter(Mandatory)][string] $SourceMailbox,
+    [Parameter(Mandatory)][string] $UserMailbox,
+    [Parameter(Mandatory)][string] $AccessRights,
+    [switch] $AutoMapping
+  )
+  Switch ($AccessRights) {
+    "FullAccess" {
+      if ($AutoMapping) {
+        Write-Host "Add $($UserMailbox) ($($AccessRights)) on $($SourceMailbox) ..."
+        Add-MailboxPermission -Identity $SourceMailbox -User $UserMailbox -AccessRights FullAccess -AutoMapping:$true -Confirm:$false
+      } else {
+        Write-Host "Add $($UserMailbox) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
+        Add-MailboxPermission -Identity $SourceMailbox -User $UserMailbox -AccessRights FullAccess -AutoMapping:$false -Confirm:$false
+      }
+    }
+    "SendAs" {
+      Write-Host "Add $($UserMailbox) ($($AccessRights)) on $($SourceMailbox) ..."
+      Add-RecipientPermission $SourceMailbox -Trustee $UserMailbox -AccessRights SendAs -Confirm:$false
+    }
+    "All" {
+      if ($AutoMapping) {
+        Write-Host "Add $($UserMailbox) ($($AccessRights)) on $($SourceMailbox) ..."
+        Add-MailboxPermission -Identity $SourceMailbox -User $UserMailbox -AccessRights FullAccess -AutoMapping:$true -Confirm:$false
+        Write-Host "Add $($UserMailbox) ($($AccessRights)) on $($SourceMailbox) ..."
+        Add-RecipientPermission $SourceMailbox -Trustee $UserMailbox -AccessRights SendAs -Confirm:$false
+      }
+      else {
+        Write-Host "Add $($UserMailbox) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
+        Add-MailboxPermission -Identity $SourceMailbox -User $UserMailbox -AccessRights FullAccess -AutoMapping:$false -Confirm:$false
+        Write-Host "Add $($UserMailbox) ($($AccessRights)) on $($SourceMailbox) ..."
+        Add-RecipientPermission $SourceMailbox -Trustee $UserMailbox -AccessRights SendAs -Confirm:$false
+      }
+    }
+  }
 }
 
 function RemoveMboxPermission {
-  param( [string] $sourceMailbox )
-  Write-Host "Remove $($_) from $($sourceMailbox) ..."
-  Remove-MailboxPermission -Identity $sourceMailbox -User $_ -AccessRights FullAccess -Confirm:$false
-  Remove-RecipientPermission $sourceMailbox -Trustee $_ -AccessRights SendAs -Confirm:$false
+  param(
+    [Parameter(Mandatory)][string] $SourceMailbox,
+    [Parameter(Mandatory)][string] $UserMailbox,
+    [Parameter(Mandatory)][string] $AccessRights
+  )
+  Write-Host "Remove $($UserMailbox) ($($AccessRights)) from $($SourceMailbox)..."
+  Switch ($AccessRights) {
+    "FullAccess" { Remove-MailboxPermission -Identity $SourceMailbox -User $UserMailbox -AccessRights FullAccess -Confirm:$false }
+    "SendAs" { Remove-RecipientPermission $SourceMailbox -Trustee $UserMailbox -AccessRights SendAs -Confirm:$false }
+    "All" {
+      Remove-MailboxPermission -Identity $SourceMailbox -User $UserMailbox -AccessRights FullAccess -Confirm:$false
+      Remove-RecipientPermission $SourceMailbox -Trustee $UserMailbox -AccessRights SendAs -Confirm:$false
+    }
+  }
 }
 
 # M365: Protection =======================================================================================================================================================================
 
 function QuarantineRelease {
   param(
-    [string] $senderAddress,
-    [switch] $release
+    [string] $SenderAddress,
+    [switch] $Release
   )
-  if ($release) {
-    Write-Host "Release quarantine from known senders: release email(s) from $($senderAddress) ..."
-    Get-QuarantineMessage -QuarantineTypes TransportRule -SenderAddress $senderAddress | ForEach {Get-QuarantineMessage -Identity $_.Identity} | ? {$_.QuarantinedUser -ne $null} | Release-QuarantineMessage -ReleaseToAll
-    Write-Host "Release quarantine from known senders: verifying email(s) from $($senderAddress) just released ..."
-    Get-QuarantineMessage -QuarantineTypes TransportRule -SenderAddress $senderAddress | ForEach {Get-QuarantineMessage -Identity $_.Identity} | ft -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+  if ($Release) {
+    Write-Host "Release quarantine from known senders: release email(s) from $($SenderAddress) ..."
+    Get-QuarantineMessage -QuarantineTypes TransportRule -SenderAddress $SenderAddress | ForEach-Object {Get-QuarantineMessage -Identity $_.Identity} | Where-Object {$null -ne $_.QuarantinedUser} | Release-QuarantineMessage -ReleaseToAll
+    Write-Host "Release quarantine from known senders: verifying email(s) from $($SenderAddress) just released ..."
+    Get-QuarantineMessage -QuarantineTypes TransportRule -SenderAddress $SenderAddress | ForEach-Object {Get-QuarantineMessage -Identity $_.Identity} | Format-Table -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
   } else {
-    Write-Host "Find email(s) from known senders quarantined: email(s) from $($senderAddress) not yet released ..."
-    Get-QuarantineMessage -QuarantineTypes TransportRule -SenderAddress $senderAddress | ForEach {Get-QuarantineMessage -Identity $_.Identity} | ft -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+    Write-Host "Find email(s) from known senders quarantined: email(s) from $($SenderAddress) not yet released ..."
+    Get-QuarantineMessage -QuarantineTypes TransportRule -SenderAddress $SenderAddress | ForEach-Object {Get-QuarantineMessage -Identity $_.Identity} | Format-Table -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
   }
 }
 
@@ -53,3 +100,4 @@ Export-ModuleMember -Function ConnectMSOnline
 Export-ModuleMember -Function MboxPermission
 Export-ModuleMember -Function QuarantineRelease
 Export-ModuleMember -Function RemoveMboxPermission
+Export-ModuleMember -Function SmtpExpand
