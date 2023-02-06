@@ -1,26 +1,27 @@
-# M365: connessioni ======================================================================================================================================================================
+# Connections ======================================================================================================================================================
 
 function ConnectMSOnline {
-  #Import-Module MSOnline -UseWindowsPowershell
-  Import-Module MSOnline -SkipEditionCheck
+  Import-Module MSOnline -UseWindowsPowershell
   Connect-MsolService | Out-Null
 }
 
-# Check dettagli e ACL caselle di posta ==================================================================================================================================================
+# Groups ===========================================================================================================================================================
 
-function MboxPermission {
-  param( [Parameter(Mandatory)][string] $SourceMailbox )
-  Get-MailboxPermission -Identity $SourceMailbox | Where-Object {$_.user.tostring() -ne "NT AUTHORITY\SELF" -and $_.user.tostring() -NotLike "S-1-5*" -and $_.IsInherited -eq $false} | Select-Object Identity,User,AccessRights
-  Get-RecipientPermission $SourceMailbox -AccessRights SendAs | Where-Object {$_.Trustee.tostring() -ne "NT AUTHORITY\SELF" -and $_.Trustee.tostring() -NotLike "S-1-5*"} | Select-Object Identity,Trustee,AccessRights | Out-String
-  Get-Mailbox $SourceMailbox | Select-Object -Expand GrantSendOnBehalfTo
+function ExplodeDDG {
+  param(
+    [Parameter(Mandatory)][string] $DDG,
+    [switch] $GridView
+  )
+  if ($GridView) {
+        Write-Host "List $($DDG) members using GridView ..."
+        Get-DynamicDistributionGroupMember $DDG | Select-Object DisplayName,FirstName,LastName,PrimarySmtpAddress,Company,City | Out-GridView
+      } else {
+        Write-Host "List $($DDG) members ..."
+        Get-DynamicDistributionGroupMember $DDG | Select-Object DisplayName,FirstName,LastName,PrimarySmtpAddress,Company,City
+      }
 }
 
-function SmtpExpand {
-  param( [Parameter(Mandatory)][string] $SourceMailbox )
-  Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
-}
-
-# Modifica ACL caselle di posta ==========================================================================================================================================================
+# Mailboxes ========================================================================================================================================================
 
 function AddMboxPermission {
   param(
@@ -60,6 +61,15 @@ function AddMboxPermission {
   }
 }
 
+function MboxPermission {
+  param(
+    [Parameter(Mandatory)][string] $SourceMailbox
+  )
+  Get-MailboxPermission -Identity $SourceMailbox | Where-Object {$_.user.tostring() -ne "NT AUTHORITY\SELF" -and $_.user.tostring() -NotLike "S-1-5*" -and $_.IsInherited -eq $false} | Select-Object Identity,User,AccessRights
+  Get-RecipientPermission $SourceMailbox -AccessRights SendAs | Where-Object {$_.Trustee.tostring() -ne "NT AUTHORITY\SELF" -and $_.Trustee.tostring() -NotLike "S-1-5*"} | Select-Object Identity,Trustee,AccessRights | Out-String
+  Get-Mailbox $SourceMailbox | Select-Object -Expand GrantSendOnBehalfTo
+}
+
 function RemoveMboxPermission {
   param(
     [Parameter(Mandatory)][string] $SourceMailbox,
@@ -77,7 +87,26 @@ function RemoveMboxPermission {
   }
 }
 
-# M365: Protection =======================================================================================================================================================================
+function SmtpExpand {
+  param(
+    [Parameter(Mandatory)][string] $SourceMailbox
+  )
+  Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
+}
+
+# Modules ==========================================================================================================================================================
+
+function ReloadModule {
+  param(
+    [Parameter(Mandatory)][string] $Module
+  )
+  Write-Host "Reload $($Module) module ..."
+  Remove-Module $Module
+  Import-Module $Module
+  Get-Module | Where-Object { $_.Name -eq "$($Module)" }
+}
+
+# Protection =======================================================================================================================================================
 
 function QuarantineRelease {
   param(
@@ -97,7 +126,9 @@ function QuarantineRelease {
 
 Export-ModuleMember -Function AddMboxPermission
 Export-ModuleMember -Function ConnectMSOnline
+Export-ModuleMember -Function ExplodeDDG
 Export-ModuleMember -Function MboxPermission
 Export-ModuleMember -Function QuarantineRelease
+Export-ModuleMember -Function ReloadModule
 Export-ModuleMember -Function RemoveMboxPermission
 Export-ModuleMember -Function SmtpExpand

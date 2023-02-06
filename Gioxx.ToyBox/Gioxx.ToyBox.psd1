@@ -18,16 +18,20 @@
   FunctionsToExport = @(
     "AddMboxPermission",
     "ConnectMSOnline",
+    "ExplodeDDG",
     "MboxPermission",
     "QuarantineRelease",
+    "ReloadModule",
     "RemoveMboxPermission",
     "SmtpExpand"
   )
   CmdletsToExport = @(
     "AddMboxPermission",
     "ConnectMSOnline",
+    "ExplodeDDG",
     "MboxPermission",
     "QuarantineRelease",
+    "ReloadModule",
     "RemoveMboxPermission",
     "SmtpExpand"
   )
@@ -42,7 +46,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview4'
+      Prerelease = 'Preview5'
       RequireLicenseAcceptance = $false
 
       }
