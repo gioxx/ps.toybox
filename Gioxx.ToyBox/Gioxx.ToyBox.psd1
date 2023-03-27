@@ -19,6 +19,7 @@
     "AddMboxPermission",
     "ConnectMSOnline",
     "ExplodeDDG",
+    "MboxAlias",
     "MboxPermission",
     "QuarantineRelease",
     "ReloadModule",
@@ -29,6 +30,7 @@
     "AddMboxPermission",
     "ConnectMSOnline",
     "ExplodeDDG",
+    "MboxAlias",
     "MboxPermission",
     "QuarantineRelease",
     "ReloadModule",
@@ -46,7 +48,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview5'
+      Prerelease = 'Preview6'
       RequireLicenseAcceptance = $false
 
       }

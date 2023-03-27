@@ -61,6 +61,21 @@ function AddMboxPermission {
   }
 }
 
+function MboxAlias {
+  param(
+    [Parameter(Mandatory, HelpMessage="User to edit (e.g. mario.rossi)")][string] $SourceMailbox,
+    [Parameter(Mandatory, HelpMessage="Alias to be added (e.g. mario.rossi.alias@contoso.com)")][string] $MailboxAlias,
+    [switch] $Remove
+  )
+  if ($Remove) {
+    Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"}
+    Get-Recipient $SourceMailbox | Select Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
+  } else {
+    Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"}
+    Get-Recipient $SourceMailbox | Select Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
+  }
+}
+
 function MboxPermission {
   param(
     [Parameter(Mandatory)][string] $SourceMailbox
@@ -127,6 +142,7 @@ function QuarantineRelease {
 Export-ModuleMember -Function AddMboxPermission
 Export-ModuleMember -Function ConnectMSOnline
 Export-ModuleMember -Function ExplodeDDG
+Export-ModuleMember -Function MboxAlias
 Export-ModuleMember -Function MboxPermission
 Export-ModuleMember -Function QuarantineRelease
 Export-ModuleMember -Function ReloadModule
