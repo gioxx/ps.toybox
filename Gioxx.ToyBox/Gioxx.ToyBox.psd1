@@ -16,25 +16,27 @@
   PowerShellVersion = '7.0'
 
   FunctionsToExport = @(
-    "AddMboxPermission",
     "ConnectMSOnline",
     "ExplodeDDG",
     "MboxAlias",
+    "MboxPermission-Add",
+    "MboxPermission-Remove",
     "MboxPermission",
     "QuarantineRelease",
     "ReloadModule",
-    "RemoveMboxPermission",
+    "SharedMbox-New",
     "SmtpExpand"
   )
   CmdletsToExport = @(
-    "AddMboxPermission",
     "ConnectMSOnline",
     "ExplodeDDG",
     "MboxAlias",
+    "MboxPermission-Add",
+    "MboxPermission-Remove",
     "MboxPermission",
     "QuarantineRelease",
     "ReloadModule",
-    "RemoveMboxPermission",
+    "SharedMbox-New",
     "SmtpExpand"
   )
   VariablesToExport = '*' # Variables to export from this module
@@ -48,7 +50,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview6'
+      Prerelease = 'Preview7'
       RequireLicenseAcceptance = $false
 
       }

@@ -23,7 +23,31 @@ function ExplodeDDG {
 
 # Mailboxes ========================================================================================================================================================
 
-function AddMboxPermission {
+function MboxAlias {
+  param(
+    [Parameter(Mandatory, HelpMessage="User to edit (e.g. mario.rossi)")][string] $SourceMailbox,
+    [Parameter(Mandatory, HelpMessage="Alias to be added (e.g. mario.rossi.alias@contoso.com)")][string] $MailboxAlias,
+    [switch] $Remove
+  )
+  if ($Remove) {
+    Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"}
+    Get-Recipient $SourceMailbox | Select Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
+  } else {
+    Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"}
+    Get-Recipient $SourceMailbox | Select Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
+  }
+}
+
+function MboxPermission {
+  param(
+    [Parameter(Mandatory)][string] $SourceMailbox
+  )
+  Get-MailboxPermission -Identity $SourceMailbox | Where-Object {$_.user.tostring() -ne "NT AUTHORITY\SELF" -and $_.user.tostring() -NotLike "S-1-5*" -and $_.IsInherited -eq $false} | Select-Object Identity,User,AccessRights
+  Get-RecipientPermission $SourceMailbox -AccessRights SendAs | Where-Object {$_.Trustee.tostring() -ne "NT AUTHORITY\SELF" -and $_.Trustee.tostring() -NotLike "S-1-5*"} | Select-Object Identity,Trustee,AccessRights | Out-String
+  Get-Mailbox $SourceMailbox | Select-Object -Expand GrantSendOnBehalfTo
+}
+
+function MboxPermission-Add {
   param(
     [Parameter(Mandatory)][string] $SourceMailbox,
     [Parameter(Mandatory)][string] $UserMailbox,
@@ -61,31 +85,7 @@ function AddMboxPermission {
   }
 }
 
-function MboxAlias {
-  param(
-    [Parameter(Mandatory, HelpMessage="User to edit (e.g. mario.rossi)")][string] $SourceMailbox,
-    [Parameter(Mandatory, HelpMessage="Alias to be added (e.g. mario.rossi.alias@contoso.com)")][string] $MailboxAlias,
-    [switch] $Remove
-  )
-  if ($Remove) {
-    Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"}
-    Get-Recipient $SourceMailbox | Select Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
-  } else {
-    Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"}
-    Get-Recipient $SourceMailbox | Select Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
-  }
-}
-
-function MboxPermission {
-  param(
-    [Parameter(Mandatory)][string] $SourceMailbox
-  )
-  Get-MailboxPermission -Identity $SourceMailbox | Where-Object {$_.user.tostring() -ne "NT AUTHORITY\SELF" -and $_.user.tostring() -NotLike "S-1-5*" -and $_.IsInherited -eq $false} | Select-Object Identity,User,AccessRights
-  Get-RecipientPermission $SourceMailbox -AccessRights SendAs | Where-Object {$_.Trustee.tostring() -ne "NT AUTHORITY\SELF" -and $_.Trustee.tostring() -NotLike "S-1-5*"} | Select-Object Identity,Trustee,AccessRights | Out-String
-  Get-Mailbox $SourceMailbox | Select-Object -Expand GrantSendOnBehalfTo
-}
-
-function RemoveMboxPermission {
+function MboxPermission-Remove {
   param(
     [Parameter(Mandatory)][string] $SourceMailbox,
     [Parameter(Mandatory)][string] $UserMailbox,
@@ -100,6 +100,19 @@ function RemoveMboxPermission {
       Remove-RecipientPermission $SourceMailbox -Trustee $UserMailbox -AccessRights SendAs -Confirm:$false
     }
   }
+}
+
+function SharedMbox-New {
+  param(
+    [Parameter(Mandatory, HelpMessage="Primary SMTP Address (example: info@contoso.com)")][string] $SharedMailboxSMTPAddress,
+    [Parameter(Mandatory, HelpMessage="Mailbox Display Name (example: Contoso srl -Info)")][string] $SharedMailboxDisplayName,
+    [Parameter(Mandatory, HelpMessage="Mailbox Alias (example: Contososrl_info)")][string] $SharedMailboxAlias
+  )
+  New-Mailbox -Name $SharedMailboxDisplayName -Alias $SharedMailboxAlias -Shared -PrimarySMTPAddress $SharedMailboxSMTPAddress
+  Write-Host "Set outgoing email copy save for $($SharedMailboxSMTPAddress)" -f "Yellow"
+  Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSentAsEnabled $True
+	Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSendOnBehalfEnabled $True
+  Write-Host "All done, remember to set access and editing rights to the new mailbox."
 }
 
 function SmtpExpand {
@@ -139,12 +152,15 @@ function QuarantineRelease {
   }
 }
 
-Export-ModuleMember -Function AddMboxPermission
+# Start your engine ================================================================================================================================================
+
 Export-ModuleMember -Function ConnectMSOnline
 Export-ModuleMember -Function ExplodeDDG
 Export-ModuleMember -Function MboxAlias
 Export-ModuleMember -Function MboxPermission
+Export-ModuleMember -Function MboxPermission-Add
+Export-ModuleMember -Function MboxPermission-Remove
 Export-ModuleMember -Function QuarantineRelease
 Export-ModuleMember -Function ReloadModule
-Export-ModuleMember -Function RemoveMboxPermission
+Export-ModuleMember -Function SharedMbox-New
 Export-ModuleMember -Function SmtpExpand
