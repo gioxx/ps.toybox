@@ -22,6 +22,7 @@
     "MboxPermission-Add",
     "MboxPermission-Remove",
     "MboxPermission",
+    "MboxStatistics-Export",
     "QuarantineRelease",
     "ReloadModule",
     "SharedMbox-New",
@@ -34,6 +35,7 @@
     "MboxPermission-Add",
     "MboxPermission-Remove",
     "MboxPermission",
+    "MboxStatistics-Export",
     "QuarantineRelease",
     "ReloadModule",
     "SharedMbox-New",
@@ -50,7 +52,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview7'
+      Prerelease = 'Preview8'
       RequireLicenseAcceptance = $false
 
       }
