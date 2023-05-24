@@ -16,6 +16,7 @@
   PowerShellVersion = '7.0'
 
   FunctionsToExport = @(
+    "ConnectEOL",
     "ConnectMSOnline",
     "ExplodeDDG",
     "MboxAlias",
@@ -23,12 +24,14 @@
     "MboxPermission-Remove",
     "MboxPermission",
     "MboxStatistics-Export",
+    "MsolAccountSku-Export",
     "QuarantineRelease",
     "ReloadModule",
     "SharedMbox-New",
     "SmtpExpand"
   )
   CmdletsToExport = @(
+    "ConnectEOL",
     "ConnectMSOnline",
     "ExplodeDDG",
     "MboxAlias",
@@ -36,6 +39,7 @@
     "MboxPermission-Remove",
     "MboxPermission",
     "MboxStatistics-Export",
+    "MsolAccountSku-Export",
     "QuarantineRelease",
     "ReloadModule",
     "SharedMbox-New",
@@ -52,7 +56,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview8'
+      Prerelease = 'Preview12'
       RequireLicenseAcceptance = $false
 
       }
