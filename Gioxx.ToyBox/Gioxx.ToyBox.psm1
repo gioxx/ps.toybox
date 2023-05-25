@@ -21,10 +21,8 @@ function ConnectEOL {
   param(
     [Parameter(Mandatory, HelpMessage="User to connect to Exchange Online with")][string] $UserPrincipalName
   )
-  $EOLModule = Get-Module -Name ExchangeOnlineManagement -ListAvailable
-  if ($EOLModule.count -eq 0) {
+  if ( (Get-Module -Name ExchangeOnlineManagement -ListAvailable).count -eq 0 ) {
     Write-Host "Install the ExchangeOnlineManagement module using this command (then relaunch this script): `nInstall-Module ExchangeOnlineManagement" -f "Yellow"
-    exit
   } else {
     Import-Module ExchangeOnlineManagement
     Connect-ExchangeOnline -UserPrincipalName $UserPrincipalName
@@ -32,10 +30,8 @@ function ConnectEOL {
 }
 
 function ConnectMSOnline {
-  $MSOnlineModule = Get-Module -Name MSOnline -ListAvailable
-  if ($MSOnlineModule.count -eq 0) {
+  if ( (Get-Module -Name MSOnline -ListAvailable).count -eq 0 ) {
     Write-Host "Install the MSOnline module using this command (then relaunch this script): `nInstall-Module MSOnline" -f "Yellow"
-    exit
   } else {
     Import-Module MSOnline -UseWindowsPowershell
     Connect-MsolService | Out-Null
@@ -166,8 +162,7 @@ function ReloadModule {
     [Parameter(Mandatory, HelpMessage="Name of the module to reload (e.g. Gioxx.ToyBox)")][string] $Module
   )
   Write-Host "Reload $($Module) module ..."
-  Remove-Module $Module
-  Import-Module $Module
+  Import-Module $Module -Force
   Get-Module | Where-Object { $_.Name -eq "$($Module)" }
 }
 
@@ -212,10 +207,11 @@ function MboxStatistics-Export {
   
   $Mailboxes | Foreach-Object {
     $ProcessedCount++
+    $PercentComplete = (($ProcessedCount / $TotalMailboxes) * 100)
     $Mbox = $_
     $Size = $null
     $ArchiveSize = $null
-    Write-Progress -Activity "Processing $Mbox" -Status "$ProcessedCount out of $TotalMailboxes completed" -PercentComplete (($ProcessedCount / $TotalMailboxes) * 100)
+    Write-Progress -Activity "Processing $Mbox" -Status "$ProcessedCount out of $TotalMailboxes completed ($($PercentComplete)%)" -PercentComplete $PercentComplete
     
     if ( $Mbox.ArchiveDatabase -ne $null) {
       $MailboxArchiveSize = Get-MailboxStatistics $Mbox.UserPrincipalName -Archive
@@ -260,18 +256,24 @@ function MsolAccountSku-Export {
     exit
   } else { Connect-MgGraph }
 
-  if( (Get-Module -Name MSOnline -ListAvailable).count -eq 0 ) {
+  if ( (Get-Module -Name MSOnline -ListAvailable).count -eq 0 ) {
     Write-Host "Please install the MSOnline module using this command (then relaunch this script): `nInstall-Module MSOnline" -f "Yellow"
     exit
   } else {
-    Import-Module MSOnline -UseWindowsPowershell
+    if ( (Get-Module -Name MSOnline).count -eq 0 ) {
+      Import-Module MSOnline -UseWindowsPowershell -WarningAction Ignore
+    }
     Connect-MsolService | Out-Null
   }
 
-  if( (Get-Module -Name Microsoft.Graph.Users -ListAvailable).count -eq 0 ) {
+  if ( (Get-Module -Name Microsoft.Graph.Users -ListAvailable).count -eq 0 ) {
     Write-Host "Please install the Microsoft.Graph.Users module using this command (then relaunch this script): `nInstall-Module Microsoft.Graph.Users" -f "Yellow"
     exit
-  } else { Import-Module Microsoft.Graph.Users }
+  } else {
+    if ( (Get-Module -Name Microsoft.Graph.Users).count -eq 0 ) {
+      Import-Module Microsoft.Graph.Users
+    }
+  }
 
   Set-Variable ProgressPreference Continue
   if ([string]::IsNullOrEmpty($folderCSV)) {
@@ -295,16 +297,16 @@ function MsolAccountSku-Export {
 
   $Users | Foreach-Object {
     $ProcessedCount++
+    $PercentComplete = (($ProcessedCount / $totalUsers) * 100)
     $User = $_
-    Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers" -PercentComplete (($ProcessedCount / $totalUsers) * 100)
-    $GraphLicense = Get-MgUserLicenseDetail -UserId $_.UserPrincipalName
+    Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete)%)" -PercentComplete $PercentComplete
+    $GraphLicense = Get-MgUserLicenseDetail -UserId $User.UserPrincipalName
     ForEach ( $License in $($GraphLicense.SkuPartNumber) ) {
       ForEach ( $licName in $licenseFile ) {
         if ( $licName.licName -eq $License ) {
             $Result += New-Object -TypeName PSObject -Property $([ordered]@{
              UserName = $User.DisplayName
              UserPrincipalName = $User.UserPrincipalName
-             IsLicensed = $User.IsLicensed
              Licenses = $licName.licDisplayName
             })
           break
