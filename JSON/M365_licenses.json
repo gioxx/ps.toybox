@@ -1,958 +1,958 @@
 [
     {
         "licName": "AAD_BASIC",
-        "licDisplayName": " Azure Active Directory Basic"
+        "licDisplayName": "Azure Active Directory Basic"
     },
     {
         "licName": "AAD_PREMIUM",
-        "licDisplayName": " Azure Active Directory Premium"
+        "licDisplayName": "Azure Active Directory Premium"
     },
     {
         "licName": "AAD_PREMIUM_P1",
-        "licDisplayName": " Azure Active Directory Premium P1"
+        "licDisplayName": "Azure Active Directory Premium P1"
     },
     {
         "licName": "AAD_PREMIUM_P2",
-        "licDisplayName": " Azure Active Directory Premium P2"
+        "licDisplayName": "Azure Active Directory Premium P2"
     },
     {
         "licName": "ADALLOM_O365",
-        "licDisplayName": " Office 365 Advanced Security Management"
+        "licDisplayName": "Office 365 Advanced Security Management"
     },
     {
         "licName": "ADALLOM_STANDALONE",
-        "licDisplayName": " Microsoft Cloud App Security"
+        "licDisplayName": "Microsoft Cloud App Security"
     },
     {
         "licName": "ADALLOM_S_O365",
-        "licDisplayName": " POWER BI STANDALONE"
+        "licDisplayName": "POWER BI STANDALONE"
     },
     {
         "licName": "ADALLOM_S_STANDALONE",
-        "licDisplayName": " Microsoft Cloud App Security"
+        "licDisplayName": "Microsoft Cloud App Security"
     },
     {
         "licName": "ATA",
-        "licDisplayName": " Azure Advanced Threat Protection for Users"
+        "licDisplayName": "Azure Advanced Threat Protection for Users"
     },
     {
         "licName": "ATP_ENTERPRISE",
-        "licDisplayName": " Exchange Online Advanced Threat Protection"
+        "licDisplayName": "Exchange Online Advanced Threat Protection"
     },
     {
         "licName": "ATP_ENTERPRISE_FACULTY",
-        "licDisplayName": " Exchange Online Advanced Threat Protection"
+        "licDisplayName": "Exchange Online Advanced Threat Protection"
     },
     {
         "licName": "BI_AZURE_P0",
-        "licDisplayName": " Power BI (free)"
+        "licDisplayName": "Power BI (free)"
     },
     {
         "licName": "BI_AZURE_P1",
-        "licDisplayName": " Power BI Reporting and Analytics"
+        "licDisplayName": "Power BI Reporting and Analytics"
     },
     {
         "licName": "BI_AZURE_P2",
-        "licDisplayName": " Power BI Pro"
+        "licDisplayName": "Power BI Pro"
     },
     {
         "licName": "CCIBOTS_PRIVPREV_VIRAL",
-        "licDisplayName": " Dynamics 365 AI for Customer Service Virtual Agents Viral SKU"
+        "licDisplayName": "Dynamics 365 AI for Customer Service Virtual Agents Viral SKU"
     },
     {
         "licName": "CRMINSTANCE",
-        "licDisplayName": " Microsoft Dynamics CRM Online Additional Production Instance (Government Pricing)"
+        "licDisplayName": "Microsoft Dynamics CRM Online Additional Production Instance (Government Pricing)"
     },
     {
         "licName": "CRMIUR",
-        "licDisplayName": " CRM for Partners"
+        "licDisplayName": "CRM for Partners"
     },
     {
         "licName": "CRMPLAN1",
-        "licDisplayName": " Microsoft Dynamics CRM Online Essential (Government Pricing)"
+        "licDisplayName": "Microsoft Dynamics CRM Online Essential (Government Pricing)"
     },
     {
         "licName": "CRMPLAN2",
-        "licDisplayName": " Dynamics CRM Online Plan 2"
+        "licDisplayName": "Dynamics CRM Online Plan 2"
     },
     {
         "licName": "CRMSTANDARD",
-        "licDisplayName": " CRM Online"
+        "licDisplayName": "CRM Online"
     },
     {
         "licName": "CRMSTORAGE",
-        "licDisplayName": " Microsoft Dynamics CRM Online Additional Storage"
+        "licDisplayName": "Microsoft Dynamics CRM Online Additional Storage"
     },
     {
         "licName": "CRMTESTINSTANCE",
-        "licDisplayName": " CRM Test Instance"
+        "licDisplayName": "CRM Test Instance"
     },
     {
         "licName": "DESKLESS",
-        "licDisplayName": " Microsoft StaffHub"
+        "licDisplayName": "Microsoft StaffHub"
     },
     {
         "licName": "DESKLESSPACK",
-        "licDisplayName": " Office 365 Plan K1"
+        "licDisplayName": "Office 365 Plan K1"
     },
     {
         "licName": "DESKLESSPACK_GOV",
-        "licDisplayName": " Microsoft Office 365 Plan K1 for Government"
+        "licDisplayName": "Microsoft Office 365 Plan K1 for Government"
     },
     {
         "licName": "DESKLESSPACK_YAMMER",
-        "licDisplayName": " Office 365 Enterprise K1 with Yammer"
+        "licDisplayName": "Office 365 Enterprise K1 with Yammer"
     },
     {
         "licName": "DESKLESSWOFFPACK",
-        "licDisplayName": " Office 365 Plan K2"
+        "licDisplayName": "Office 365 Plan K2"
     },
     {
         "licName": "DESKLESSWOFFPACK_GOV",
-        "licDisplayName": " Microsoft Office 365 Plan K2 for Government"
+        "licDisplayName": "Microsoft Office 365 Plan K2 for Government"
     },
     {
         "licName": "DEVELOPERPACK",
-        "licDisplayName": " Office 365 Enterprise E3 Developer"
+        "licDisplayName": "Office 365 Enterprise E3 Developer"
     },
     {
         "licName": "DEVELOPERPACK_E5",
-        "licDisplayName": " Microsoft 365 E5 Developer(without Windows and Audio Conferencing)"
+        "licDisplayName": "Microsoft 365 E5 Developer(without Windows and Audio Conferencing)"
     },
     {
         "licName": "DMENTERPRISE",
-        "licDisplayName": " Microsoft Dynamics Marketing Online Enterprise"
+        "licDisplayName": "Microsoft Dynamics Marketing Online Enterprise"
     },
     {
         "licName": "DYN365_ENTERPRISE_CUSTOMER_SERVICE",
-        "licDisplayName": " Dynamics 365 for Customer Service Enterprise Edition"
+        "licDisplayName": "Dynamics 365 for Customer Service Enterprise Edition"
     },
     {
         "licName": "DYN365_ENTERPRISE_P1_IW",
-        "licDisplayName": " Dynamics 365 P1 Trial for Information Workers"
+        "licDisplayName": "Dynamics 365 P1 Trial for Information Workers"
     },
     {
         "licName": "DYN365_ENTERPRISE_PLAN1",
-        "licDisplayName": " Dynamics 365 Plan 1 Enterprise Edition"
+        "licDisplayName": "Dynamics 365 Plan 1 Enterprise Edition"
     },
     {
         "licName": "DYN365_ENTERPRISE_SALES",
-        "licDisplayName": " Dynamics 365 for Sales Enterprise Edition"
+        "licDisplayName": "Dynamics 365 for Sales Enterprise Edition"
     },
     {
         "licName": "DYN365_ENTERPRISE_SALES_CUSTOMERSERVICE",
-        "licDisplayName": " Dynamics 365 for Sales and Customer Service Enterprise Edition"
+        "licDisplayName": "Dynamics 365 for Sales and Customer Service Enterprise Edition"
     },
     {
         "licName": "DYN365_ENTERPRISE_TEAM_MEMBERS",
-        "licDisplayName": " Dynamics 365 for Team Members Enterprise Edition"
+        "licDisplayName": "Dynamics 365 for Team Members Enterprise Edition"
     },
     {
         "licName": "DYN365_FINANCIALS_BUSINESS_SKU",
-        "licDisplayName": " Dynamics 365 for Financials Business Edition"
+        "licDisplayName": "Dynamics 365 for Financials Business Edition"
     },
     {
         "licName": "DYN365_MARKETING_USER",
-        "licDisplayName": " Dynamics 365 for Marketing USL"
+        "licDisplayName": "Dynamics 365 for Marketing USL"
     },
     {
         "licName": "DYN365_MARKETING_APP",
-        "licDisplayName": "  Dynamics 365 Marketing"
+        "licDisplayName": " Dynamics 365 Marketing"
     },
     {
         "licName": "DYN365_SALES_INSIGHTS",
-        "licDisplayName": " Dynamics 365 AI for Sales"
+        "licDisplayName": "Dynamics 365 AI for Sales"
     },
     {
         "licName": "D365_SALES_PRO",
-        "licDisplayName": " Dynamics 365 for Sales Professional"
+        "licDisplayName": "Dynamics 365 for Sales Professional"
     },
     {
         "licName": "Dynamics_365_for_Operations",
-        "licDisplayName": " Dynamics 365 Unf Ops Plan Ent Edition"
+        "licDisplayName": "Dynamics 365 Unf Ops Plan Ent Edition"
     },
     {
         "licName": "ECAL_SERVICES",
-        "licDisplayName": " ECAL"
+        "licDisplayName": "ECAL"
     },
     {
         "licName": "EMS",
-        "licDisplayName": " Enterprise Mobility + Security E3"
+        "licDisplayName": "Enterprise Mobility + Security E3"
     },
     {
         "licName": "EMSPREMIUM",
-        "licDisplayName": " Enterprise Mobility + Security E5"
+        "licDisplayName": "Enterprise Mobility + Security E5"
     },
     {
         "licName": "ENTERPRISEPACK",
-        "licDisplayName": " Office 365 Enterprise E3"
+        "licDisplayName": "Office 365 Enterprise E3"
     },
     {
         "licName": "ENTERPRISEPACKLRG",
-        "licDisplayName": " Office 365 Enterprise E3 LRG"
+        "licDisplayName": "Office 365 Enterprise E3 LRG"
     },
     {
         "licName": "ENTERPRISEPACKWITHOUTPROPLUS",
-        "licDisplayName": " Office 365 Enterprise E3 without ProPlus Add-on"
+        "licDisplayName": "Office 365 Enterprise E3 without ProPlus Add-on"
     },
     {
         "licName": "ENTERPRISEPACK_B_PILOT",
-        "licDisplayName": " Office 365 (Enterprise Preview)"
+        "licDisplayName": "Office 365 (Enterprise Preview)"
     },
     {
         "licName": "ENTERPRISEPACK_FACULTY",
-        "licDisplayName": " Office 365 Plan A3 for Faculty"
+        "licDisplayName": "Office 365 Plan A3 for Faculty"
     },
     {
         "licName": "ENTERPRISEPACK_GOV",
-        "licDisplayName": " Microsoft Office 365 Plan G3 for Government"
+        "licDisplayName": "Microsoft Office 365 Plan G3 for Government"
     },
     {
         "licName": "ENTERPRISEPACK_STUDENT",
-        "licDisplayName": " Office 365 Plan A3 for Students"
+        "licDisplayName": "Office 365 Plan A3 for Students"
     },
     {
         "licName": "ENTERPRISEPREMIUM",
-        "licDisplayName": " Enterprise E5 (with Audio Conferencing)"
+        "licDisplayName": "Enterprise E5 (with Audio Conferencing)"
     },
     {
         "licName": "ENTERPRISEPREMIUM_NOPSTNCONF",
-        "licDisplayName": " Enterprise E5 (without Audio Conferencing)"
+        "licDisplayName": "Enterprise E5 (without Audio Conferencing)"
     },
     {
         "licName": "ENTERPRISEWITHSCAL",
-        "licDisplayName": " Office 365 Enterprise E4"
+        "licDisplayName": "Office 365 Enterprise E4"
     },
     {
         "licName": "ENTERPRISEWITHSCAL_FACULTY",
-        "licDisplayName": " Office 365 Plan A4 for Faculty"
+        "licDisplayName": "Office 365 Plan A4 for Faculty"
     },
     {
         "licName": "ENTERPRISEWITHSCAL_GOV",
-        "licDisplayName": " Microsoft Office 365 Plan G4 for Government"
+        "licDisplayName": "Microsoft Office 365 Plan G4 for Government"
     },
     {
         "licName": "ENTERPRISEWITHSCAL_STUDENT",
-        "licDisplayName": " Office 365 Plan A4 for Students"
+        "licDisplayName": "Office 365 Plan A4 for Students"
     },
     {
         "licName": "EOP_ENTERPRISE",
-        "licDisplayName": " Exchange Online Protection"
+        "licDisplayName": "Exchange Online Protection"
     },
     {
         "licName": "EOP_ENTERPRISE_FACULTY",
-        "licDisplayName": " Exchange Online Protection for Faculty"
+        "licDisplayName": "Exchange Online Protection for Faculty"
     },
     {
         "licName": "EQUIVIO_ANALYTICS",
-        "licDisplayName": " Office 365 Advanced Compliance"
+        "licDisplayName": "Office 365 Advanced Compliance"
     },
     {
         "licName": "EQUIVIO_ANALYTICS_FACULTY",
-        "licDisplayName": " Office 365 Advanced Compliance for Faculty"
+        "licDisplayName": "Office 365 Advanced Compliance for Faculty"
     },
     {
         "licName": "ESKLESSWOFFPACK_GOV",
-        "licDisplayName": " Microsoft Office 365 Plan K2 for Government"
+        "licDisplayName": "Microsoft Office 365 Plan K2 for Government"
     },
     {
         "licName": "EXCHANGEARCHIVE",
-        "licDisplayName": " Exchange Online Archiving"
+        "licDisplayName": "Exchange Online Archiving"
     },
     {
         "licName": "EXCHANGEARCHIVE_ADDON",
-        "licDisplayName": " Exchange Online Archiving for Exchange Online"
+        "licDisplayName": "Exchange Online Archiving for Exchange Online"
     },
     {
         "licName": "EXCHANGEDESKLESS",
-        "licDisplayName": " Exchange Online Kiosk"
+        "licDisplayName": "Exchange Online Kiosk"
     },
     {
         "licName": "EXCHANGEENTERPRISE",
-        "licDisplayName": " Exchange Online Plan 2"
+        "licDisplayName": "Exchange Online Plan 2"
     },
     {
         "licName": "EXCHANGEENTERPRISE_FACULTY",
-        "licDisplayName": " Exch Online Plan 2 for Faculty"
+        "licDisplayName": "Exch Online Plan 2 for Faculty"
     },
     {
         "licName": "EXCHANGEENTERPRISE_GOV",
-        "licDisplayName": " Microsoft Office 365 Exchange Online Plan 2 only for Government"
+        "licDisplayName": "Microsoft Office 365 Exchange Online Plan 2 only for Government"
     },
     {
         "licName": "EXCHANGEESSENTIALS",
-        "licDisplayName": " Exchange Online Essentials"
+        "licDisplayName": "Exchange Online Essentials"
     },
     {
         "licName": "EXCHANGESTANDARD",
-        "licDisplayName": " Office 365 Exchange Online Plan 1"
+        "licDisplayName": "Office 365 Exchange Online Plan 1"
     },
     {
         "licName": "EXCHANGESTANDARD_GOV",
-        "licDisplayName": " Microsoft Office 365 Exchange Online Plan 1 only for Government"
+        "licDisplayName": "Microsoft Office 365 Exchange Online Plan 1 only for Government"
     },
     {
         "licName": "EXCHANGESTANDARD_STUDENT",
-        "licDisplayName": " Exchange Online Plan 1 for Students"
+        "licDisplayName": "Exchange Online Plan 1 for Students"
     },
     {
         "licName": "EXCHANGETELCO",
-        "licDisplayName": " Exchange Online POP"
+        "licDisplayName": "Exchange Online POP"
     },
     {
         "licName": "EXCHANGE_ANALYTICS",
-        "licDisplayName": " Microsoft MyAnalytics"
+        "licDisplayName": "Microsoft MyAnalytics"
     },
     {
         "licName": "EXCHANGE_L_STANDARD",
-        "licDisplayName": " Exchange Online Plan 1"
+        "licDisplayName": "Exchange Online Plan 1"
     },
     {
         "licName": "EXCHANGE_S_ARCHIVE_ADDON_GOV",
-        "licDisplayName": " Exchange Online Archiving"
+        "licDisplayName": "Exchange Online Archiving"
     },
     {
         "licName": "EXCHANGE_S_DESKLESS",
-        "licDisplayName": " Exchange Online Kiosk"
+        "licDisplayName": "Exchange Online Kiosk"
     },
     {
         "licName": "EXCHANGE_S_DESKLESS_GOV",
-        "licDisplayName": " Exchange Kiosk"
+        "licDisplayName": "Exchange Kiosk"
     },
     {
         "licName": "EXCHANGE_S_ENTERPRISE",
-        "licDisplayName": " Exchange Online Plan 2 Ent"
+        "licDisplayName": "Exchange Online Plan 2 Ent"
     },
     {
         "licName": "EXCHANGE_S_ENTERPRISE_GOV",
-        "licDisplayName": " Exchange Plan 2G"
+        "licDisplayName": "Exchange Plan 2G"
     },
     {
         "licName": "EXCHANGE_S_ESSENTIALS",
-        "licDisplayName": " Exchange Online Essentials"
+        "licDisplayName": "Exchange Online Essentials"
     },
     {
         "licName": "EXCHANGE_S_FOUNDATION",
-        "licDisplayName": " Exchange Foundation for certain SKUs"
+        "licDisplayName": "Exchange Foundation for certain SKUs"
     },
     {
         "licName": "EXCHANGE_S_STANDARD",
-        "licDisplayName": " Exchange Online Plan 2"
+        "licDisplayName": "Exchange Online Plan 2"
     },
     {
         "licName": "EXCHANGE_S_STANDARD_MIDMARKET",
-        "licDisplayName": " Exchange Online Plan 1"
+        "licDisplayName": "Exchange Online Plan 1"
     },
     {
         "licName": "FLOW_FREE",
-        "licDisplayName": " Microsoft Flow (Free)"
+        "licDisplayName": "Microsoft Flow (Free)"
     },
     {
         "licName": "FLOW_O365_P2",
-        "licDisplayName": " Flow for Office 365"
+        "licDisplayName": "Flow for Office 365"
     },
     {
         "licName": "FLOW_O365_P3",
-        "licDisplayName": " Flow for Office 365"
+        "licDisplayName": "Flow for Office 365"
     },
     {
         "licName": "FLOW_P1",
-        "licDisplayName": " Microsoft Flow Plan 1"
+        "licDisplayName": "Microsoft Flow Plan 1"
     },
     {
         "licName": "FLOW_P2",
-        "licDisplayName": " Microsoft Flow Plan 2"
+        "licDisplayName": "Microsoft Flow Plan 2"
     },
     {
         "licName": "FORMS_PLAN_E3",
-        "licDisplayName": " Microsoft Forms Plan E3"
+        "licDisplayName": "Microsoft Forms Plan E3"
     },
     {
         "licName": "FORMS_PLAN_E5",
-        "licDisplayName": " Microsoft Forms Plan E5"
+        "licDisplayName": "Microsoft Forms Plan E5"
     },
     {
         "licName": "INFOPROTECTION_P2",
-        "licDisplayName": " Azure Information Protection Premium P2"
+        "licDisplayName": "Azure Information Protection Premium P2"
     },
     {
         "licName": "INTUNE_A",
-        "licDisplayName": " Windows Intune Plan A"
+        "licDisplayName": "Windows Intune Plan A"
     },
     {
         "licName": "INTUNE_A_VL",
-        "licDisplayName": " Intune (Volume License)"
+        "licDisplayName": "Intune (Volume License)"
     },
     {
         "licName": "INTUNE_O365",
-        "licDisplayName": " Mobile Device Management for Office 365"
+        "licDisplayName": "Mobile Device Management for Office 365"
     },
     {
         "licName": "INTUNE_STORAGE",
-        "licDisplayName": " Intune Extra Storage"
+        "licDisplayName": "Intune Extra Storage"
     },
     {
         "licName": "IT_ACADEMY_AD",
-        "licDisplayName": " Microsoft Imagine Academy"
+        "licDisplayName": "Microsoft Imagine Academy"
     },
     {
         "licName": "LITEPACK",
-        "licDisplayName": " Office 365 Plan P1"
+        "licDisplayName": "Office 365 Plan P1"
     },
     {
         "licName": "LITEPACK_P2",
-        "licDisplayName": " Office 365 Small Business Premium"
+        "licDisplayName": "Office 365 Small Business Premium"
     },
     {
         "licName": "LOCKBOX",
-        "licDisplayName": " Customer Lockbox"
+        "licDisplayName": "Customer Lockbox"
     },
     {
         "licName": "LOCKBOX_ENTERPRISE",
-        "licDisplayName": " Customer Lockbox"
+        "licDisplayName": "Customer Lockbox"
     },
     {
         "licName": "MCOCAP",
-        "licDisplayName": " Command Area Phone"
+        "licDisplayName": "Command Area Phone"
     },
     {
         "licName": "MCOEV",
-        "licDisplayName": " Skype for Business Cloud PBX"
+        "licDisplayName": "Skype for Business Cloud PBX"
     },
     {
         "licName": "MCOIMP",
-        "licDisplayName": " Skype for Business Online Plan 1"
+        "licDisplayName": "Skype for Business Online Plan 1"
     },
     {
         "licName": "MCOLITE",
-        "licDisplayName": " Lync Online Plan 1"
+        "licDisplayName": "Lync Online Plan 1"
     },
     {
         "licName": "MCOMEETADV",
-        "licDisplayName": " PSTN conferencing"
+        "licDisplayName": "PSTN conferencing"
     },
     {
         "licName": "MCOPLUSCAL",
-        "licDisplayName": " Skype for Business Plus CAL"
+        "licDisplayName": "Skype for Business Plus CAL"
     },
     {
         "licName": "MCOPSTN1",
-        "licDisplayName": " Skype for Business Pstn Domestic Calling"
+        "licDisplayName": "Skype for Business Pstn Domestic Calling"
     },
     {
         "licName": "MCOPSTN2",
-        "licDisplayName": " Skype for Business Pstn Domestic and International Calling"
+        "licDisplayName": "Skype for Business Pstn Domestic and International Calling"
     },
     {
         "licName": "MCOSTANDARD",
-        "licDisplayName": " Skype for Business Online Standalone Plan 2"
+        "licDisplayName": "Skype for Business Online Standalone Plan 2"
     },
     {
         "licName": "MCOSTANDARD_GOV",
-        "licDisplayName": " Lync Plan 2G"
+        "licDisplayName": "Lync Plan 2G"
     },
     {
         "licName": "MCOSTANDARD_MIDMARKET",
-        "licDisplayName": " Lync Online Plan 1"
+        "licDisplayName": "Lync Online Plan 1"
     },
     {
         "licName": "MCVOICECONF",
-        "licDisplayName": " Lync Online Plan 3"
+        "licDisplayName": "Lync Online Plan 3"
     },
     {
         "licName": "MDM_SALES_COLLABORATION",
-        "licDisplayName": " Microsoft Dynamics Marketing Sales Collaboration"
+        "licDisplayName": "Microsoft Dynamics Marketing Sales Collaboration"
     },
     {
         "licName": "MEE_FACULTY",
-        "licDisplayName": " Minecraft Education Edition Faculty"
+        "licDisplayName": "Minecraft Education Edition Faculty"
     },
     {
         "licName": "MEE_STUDENT",
-        "licDisplayName": " Minecraft Education Edition Student"
+        "licDisplayName": "Minecraft Education Edition Student"
     },
     {
         "licName": "MEETING_ROOM",
-        "licDisplayName": "  Meeting Room"
+        "licDisplayName": " Meeting Room"
     },
     {
         "licName": "MFA_PREMIUM",
-        "licDisplayName": " Azure Multi-Factor Authentication"
+        "licDisplayName": "Azure Multi-Factor Authentication"
     },
     {
         "licName": "MICROSOFT_BUSINESS_CENTER",
-        "licDisplayName": " Microsoft Business Center"
+        "licDisplayName": "Microsoft Business Center"
     },
     {
         "licName": "MICROSOFT_REMOTE_ASSIST",
-        "licDisplayName": " Dynamics 365 Remote Assist"
+        "licDisplayName": "Dynamics 365 Remote Assist"
     },
     {
         "licName": "MIDSIZEPACK",
-        "licDisplayName": " Office 365 Midsize Business"
+        "licDisplayName": "Office 365 Midsize Business"
     },
     {
         "licName": "MINECRAFT_EDUCATION_EDITION",
-        "licDisplayName": " Minecraft Education Edition Faculty"
+        "licDisplayName": "Minecraft Education Edition Faculty"
     },
     {
         "licName": "MS-AZR-0145P",
-        "licDisplayName": " Azure"
+        "licDisplayName": "Azure"
     },
     {
         "licName": "MS_TEAMS_IW",
-        "licDisplayName": " Microsoft Teams"
+        "licDisplayName": "Microsoft Teams"
     },
     {
         "licName": "NBPOSTS",
-        "licDisplayName": " Microsoft Social Engagement Additional 10k Posts (minimum 100 licenses) (Government Pricing)"
+        "licDisplayName": "Microsoft Social Engagement Additional 10k Posts (minimum 100 licenses) (Government Pricing)"
     },
     {
         "licName": "NBPROFESSIONALFORCRM",
-        "licDisplayName": " Microsoft Social Listening Professional"
+        "licDisplayName": "Microsoft Social Listening Professional"
     },
     {
         "licName": "O365_BUSINESS",
-        "licDisplayName": " Microsoft 365 Apps for business"
+        "licDisplayName": "Microsoft 365 Apps for business"
     },
     {
         "licName": "O365_BUSINESS_ESSENTIALS",
-        "licDisplayName": " Microsoft 365 Business Basic"
+        "licDisplayName": "Microsoft 365 Business Basic"
     },
     {
         "licName": "O365_BUSINESS_PREMIUM",
-        "licDisplayName": " Microsoft 365 Business Standard"
+        "licDisplayName": "Microsoft 365 Business Standard"
     },
     {
         "licName": "OFFICE365_MULTIGEO",
-        "licDisplayName": " Multi-Geo Capabilities in Office 365"
+        "licDisplayName": "Multi-Geo Capabilities in Office 365"
     },
     {
         "licName": "OFFICESUBSCRIPTION",
-        "licDisplayName": " Microsoft 365 Apps for enterprise"
+        "licDisplayName": "Microsoft 365 Apps for enterprise"
     },
     {
         "licName": "OFFICESUBSCRIPTION_FACULTY",
-        "licDisplayName": " Office 365 ProPlus for Faculty"
+        "licDisplayName": "Office 365 ProPlus for Faculty"
     },
     {
         "licName": "OFFICESUBSCRIPTION_GOV",
-        "licDisplayName": " Office ProPlus"
+        "licDisplayName": "Office ProPlus"
     },
     {
         "licName": "OFFICESUBSCRIPTION_STUDENT",
-        "licDisplayName": " Office ProPlus Student Benefit"
+        "licDisplayName": "Office ProPlus Student Benefit"
     },
     {
         "licName": "OFFICE_FORMS_PLAN_2",
-        "licDisplayName": " Microsoft Forms Plan 2"
+        "licDisplayName": "Microsoft Forms Plan 2"
     },
     {
         "licName": "OFFICE_PRO_PLUS_SUBSCRIPTION_SMBIZ",
-        "licDisplayName": " Office ProPlus"
+        "licDisplayName": "Office ProPlus"
     },
     {
         "licName": "ONEDRIVESTANDARD",
-        "licDisplayName": " OneDrive"
+        "licDisplayName": "OneDrive"
     },
     {
         "licName": "PAM_ENTERPRISE ",
-        "licDisplayName": " Exchange Primary Active Manager"
+        "licDisplayName": "Exchange Primary Active Manager"
     },
     {
         "licName": "PLANNERSTANDALONE",
-        "licDisplayName": " Planner Standalone"
+        "licDisplayName": "Planner Standalone"
     },
     {
         "licName": "POWERAPPS_INDIVIDUAL_USER",
-        "licDisplayName": " Microsoft PowerApps and Logic flows"
+        "licDisplayName": "Microsoft PowerApps and Logic flows"
     },
     {
         "licName": "POWERAPPS_O365_P2",
-        "licDisplayName": " PowerApps"
+        "licDisplayName": "PowerApps"
     },
     {
         "licName": "POWERAPPS_O365_P3",
-        "licDisplayName": " PowerApps for Office 365"
+        "licDisplayName": "PowerApps for Office 365"
     },
     {
         "licName": "POWERAPPS_VIRAL",
-        "licDisplayName": " PowerApps (Free)"
+        "licDisplayName": "PowerApps (Free)"
     },
     {
         "licName": "POWERFLOW_P1",
-        "licDisplayName": " Microsoft PowerApps Plan 1"
+        "licDisplayName": "Microsoft PowerApps Plan 1"
     },
     {
         "licName": "POWERFLOW_P2",
-        "licDisplayName": " Microsoft PowerApps Plan 2"
+        "licDisplayName": "Microsoft PowerApps Plan 2"
     },
     {
         "licName": "POWER_BI_ADDON",
-        "licDisplayName": " Office 365 Power BI Addon"
+        "licDisplayName": "Office 365 Power BI Addon"
     },
     {
         "licName": "POWER_BI_INDIVIDUAL_USE",
-        "licDisplayName": " Power BI Individual User"
+        "licDisplayName": "Power BI Individual User"
     },
     {
         "licName": "POWER_BI_INDIVIDUAL_USER",
-        "licDisplayName": " Power BI for Office 365 Individual"
+        "licDisplayName": "Power BI for Office 365 Individual"
     },
     {
         "licName": "POWER_BI_PRO",
-        "licDisplayName": " Power BI Pro"
+        "licDisplayName": "Power BI Pro"
     },
     {
         "licName": "POWER_BI_STANDALONE",
-        "licDisplayName": " Power BI Standalone"
+        "licDisplayName": "Power BI Standalone"
     },
     {
         "licName": "POWER_BI_STANDARD",
-        "licDisplayName": " Power-BI Standard"
+        "licDisplayName": "Power-BI Standard"
     },
     {
         "licName": "PREMIUM_ADMINDROID",
-        "licDisplayName": " AdminDroid Office 365 Reporter"
+        "licDisplayName": "AdminDroid Office 365 Reporter"
     },
     {
         "licName": "PROJECTCLIENT",
-        "licDisplayName": " Project Professional"
+        "licDisplayName": "Project Professional"
     },
     {
         "licName": "PROJECTESSENTIALS",
-        "licDisplayName": " Project Lite"
+        "licDisplayName": "Project Lite"
     },
     {
         "licName": "PROJECTONLINE_PLAN_1",
-        "licDisplayName": " Project Online Plan 1"
+        "licDisplayName": "Project Online Plan 1"
     },
     {
         "licName": "PROJECTONLINE_PLAN_1_FACULTY",
-        "licDisplayName": " Project Online for Faculty Plan 1"
+        "licDisplayName": "Project Online for Faculty Plan 1"
     },
     {
         "licName": "PROJECTONLINE_PLAN_1_STUDENT",
-        "licDisplayName": " Project Online for Students Plan 1"
+        "licDisplayName": "Project Online for Students Plan 1"
     },
     {
         "licName": "PROJECTONLINE_PLAN_2",
-        "licDisplayName": " Project Online and PRO"
+        "licDisplayName": "Project Online and PRO"
     },
     {
         "licName": "PROJECTONLINE_PLAN_2_FACULTY",
-        "licDisplayName": " Project Online for Faculty Plan 2"
+        "licDisplayName": "Project Online for Faculty Plan 2"
     },
     {
         "licName": "PROJECTONLINE_PLAN_2_STUDENT",
-        "licDisplayName": " Project Online for Students Plan 2"
+        "licDisplayName": "Project Online for Students Plan 2"
     },
     {
         "licName": "PROJECTPREMIUM",
-        "licDisplayName": " Project Online Premium"
+        "licDisplayName": "Project Online Premium"
     },
     {
         "licName": "PROJECTPROFESSIONAL",
-        "licDisplayName": " Project Online Pro"
+        "licDisplayName": "Project Online Pro"
     },
     {
         "licName": "PROJECTWORKMANAGEMENT",
-        "licDisplayName": " Office 365 Planner Preview"
+        "licDisplayName": "Office 365 Planner Preview"
     },
     {
         "licName": "PROJECT_CLIENT_SUBSCRIPTION",
-        "licDisplayName": " Project Pro for Office 365"
+        "licDisplayName": "Project Pro for Office 365"
     },
     {
         "licName": "PROJECT_ESSENTIALS",
-        "licDisplayName": " Project Lite"
+        "licDisplayName": "Project Lite"
     },
     {
         "licName": "PROJECT_MADEIRA_PREVIEW_IW_SKU",
-        "licDisplayName": " Dynamics 365 for Financials for IWs"
+        "licDisplayName": "Dynamics 365 for Financials for IWs"
     },
     {
         "licName": "PROJECT_ONLINE_PRO",
-        "licDisplayName": "  Project Online Plan 3"
+        "licDisplayName": " Project Online Plan 3"
     },
     {
         "licName": "RIGHTSMANAGEMENT",
-        "licDisplayName": " Azure Rights Management Premium"
+        "licDisplayName": "Azure Rights Management Premium"
     },
     {
         "licName": "RIGHTSMANAGEMENT_ADHOC",
-        "licDisplayName": " Windows Azure Rights Management"
+        "licDisplayName": "Windows Azure Rights Management"
     },
     {
         "licName": "RIGHTSMANAGEMENT_STANDARD_FACULTY",
-        "licDisplayName": " Azure Rights Management for faculty"
+        "licDisplayName": "Azure Rights Management for faculty"
     },
     {
         "licName": "RIGHTSMANAGEMENT_STANDARD_STUDENT",
-        "licDisplayName": " Information Rights Management for Students"
+        "licDisplayName": "Information Rights Management for Students"
     },
     {
         "licName": "RMS_S_ENTERPRISE",
-        "licDisplayName": " Azure Active Directory Rights Management"
+        "licDisplayName": "Azure Active Directory Rights Management"
     },
     {
         "licName": "RMS_S_ENTERPRISE_GOV",
-        "licDisplayName": " Windows Azure Active Directory Rights Management"
+        "licDisplayName": "Windows Azure Active Directory Rights Management"
     },
     {
         "licName": "RMS_S_PREMIUM",
-        "licDisplayName": " Azure Information Protection Plan 1"
+        "licDisplayName": "Azure Information Protection Plan 1"
     },
     {
         "licName": "RMS_S_PREMIUM2",
-        "licDisplayName": " Azure Information Protection Premium P2"
+        "licDisplayName": "Azure Information Protection Premium P2"
     },
     {
         "licName": "SCHOOL_DATA_SYNC_P1",
-        "licDisplayName": " School Data Sync Plan 1"
+        "licDisplayName": "School Data Sync Plan 1"
     },
     {
         "licName": "SHAREPOINTDESKLESS",
-        "licDisplayName": " SharePoint Online Kiosk"
+        "licDisplayName": "SharePoint Online Kiosk"
     },
     {
         "licName": "SHAREPOINTDESKLESS_GOV",
-        "licDisplayName": " SharePoint Online Kiosk"
+        "licDisplayName": "SharePoint Online Kiosk"
     },
     {
         "licName": "SHAREPOINTENTERPRISE",
-        "licDisplayName": " SharePoint Online Plan 2"
+        "licDisplayName": "SharePoint Online Plan 2"
     },
     {
         "licName": "SHAREPOINTENTERPRISE_EDU",
-        "licDisplayName": " SharePoint Plan 2 for EDU"
+        "licDisplayName": "SharePoint Plan 2 for EDU"
     },
     {
         "licName": "SHAREPOINTENTERPRISE_GOV",
-        "licDisplayName": " SharePoint Plan 2G"
+        "licDisplayName": "SharePoint Plan 2G"
     },
     {
         "licName": "SHAREPOINTENTERPRISE_MIDMARKET",
-        "licDisplayName": " SharePoint Online Plan 1"
+        "licDisplayName": "SharePoint Online Plan 1"
     },
     {
         "licName": "SHAREPOINTLITE",
-        "licDisplayName": " SharePoint Online Plan 1"
+        "licDisplayName": "SharePoint Online Plan 1"
     },
     {
         "licName": "SHAREPOINTPARTNER",
-        "licDisplayName": " SharePoint Online Partner Access"
+        "licDisplayName": "SharePoint Online Partner Access"
     },
     {
         "licName": "SHAREPOINTSTANDARD",
-        "licDisplayName": " SharePoint Online Plan 1"
+        "licDisplayName": "SharePoint Online Plan 1"
     },
     {
         "licName": "SHAREPOINTSTANDARD_EDU",
-        "licDisplayName": " SharePoint Plan 1 for EDU"
+        "licDisplayName": "SharePoint Plan 1 for EDU"
     },
     {
         "licName": "SHAREPOINTSTORAGE",
-        "licDisplayName": " SharePoint Online Storage"
+        "licDisplayName": "SharePoint Online Storage"
     },
     {
         "licName": "SHAREPOINTWAC",
-        "licDisplayName": " Office Online"
+        "licDisplayName": "Office Online"
     },
     {
         "licName": "SHAREPOINTWAC_EDU",
-        "licDisplayName": " Office Online for Education"
+        "licDisplayName": "Office Online for Education"
     },
     {
         "licName": "SHAREPOINTWAC_GOV",
-        "licDisplayName": " Office Online for Government"
+        "licDisplayName": "Office Online for Government"
     },
     {
         "licName": "SHAREPOINT_PROJECT",
-        "licDisplayName": " SharePoint Online Plan 2 Project"
+        "licDisplayName": "SharePoint Online Plan 2 Project"
     },
     {
         "licName": "SHAREPOINT_PROJECT_EDU",
-        "licDisplayName": " Project Online Service for Education"
+        "licDisplayName": "Project Online Service for Education"
     },
     {
         "licName": "SMB_APPS",
-        "licDisplayName": "  Business Apps (free)"
+        "licDisplayName": " Business Apps (free)"
     },
     {
         "licName": "SMB_BUSINESS",
-        "licDisplayName": " Office 365 Business"
+        "licDisplayName": "Office 365 Business"
     },
     {
         "licName": "SMB_BUSINESS_ESSENTIALS",
-        "licDisplayName": " Office 365 Business Essentials"
+        "licDisplayName": "Office 365 Business Essentials"
     },
     {
         "licName": "SMB_BUSINESS_PREMIUM",
-        "licDisplayName": " Office 365 Business Premium"
+        "licDisplayName": "Office 365 Business Premium"
     },
     {
         "licName": "SPZA IW",
-        "licDisplayName": " Microsoft PowerApps Plan 2 Trial"
+        "licDisplayName": "Microsoft PowerApps Plan 2 Trial"
     },
     {
         "licName": "SPB",
-        "licDisplayName": " Microsoft 365 Business"
+        "licDisplayName": "Microsoft 365 Business"
     },
     {
         "licName": "SPE_E3",
-        "licDisplayName": " Secure Productive Enterprise E3"
+        "licDisplayName": "Secure Productive Enterprise E3"
     },
     {
         "licName": "SQL_IS_SSIM",
-        "licDisplayName": " Power BI Information Services"
+        "licDisplayName": "Power BI Information Services"
     },
     {
         "licName": "STANDARDPACK",
-        "licDisplayName": " Office 365 Plan E1"
+        "licDisplayName": "Office 365 Plan E1"
     },
     {
         "licName": "STANDARDPACK_FACULTY",
-        "licDisplayName": " Office 365 (Plan A1) for Faculty"
+        "licDisplayName": "Office 365 (Plan A1) for Faculty"
     },
     {
         "licName": "STANDARDPACK_GOV",
-        "licDisplayName": " Microsoft Office 365 Plan G1 for Government"
+        "licDisplayName": "Microsoft Office 365 Plan G1 for Government"
     },
     {
         "licName": "STANDARDPACK_STUDENT",
-        "licDisplayName": " Office 365 Plan A1 for Students"
+        "licDisplayName": "Office 365 Plan A1 for Students"
     },
     {
         "licName": "STANDARDWOFFPACK",
-        "licDisplayName": " Office 365 Plan E2"
+        "licDisplayName": "Office 365 Plan E2"
     },
     {
         "licName": "STANDARDWOFFPACKPACK_FACULTY",
-        "licDisplayName": " Office 365 Plan A2 for Faculty"
+        "licDisplayName": "Office 365 Plan A2 for Faculty"
     },
     {
         "licName": "STANDARDWOFFPACKPACK_STUDENT",
-        "licDisplayName": " Office 365 Plan A2 for Students"
+        "licDisplayName": "Office 365 Plan A2 for Students"
     },
     {
         "licName": "STANDARDWOFFPACK_FACULTY",
-        "licDisplayName": " Office 365 Education E1 for Faculty"
+        "licDisplayName": "Office 365 Education E1 for Faculty"
     },
     {
         "licName": "STANDARDWOFFPACK_GOV",
-        "licDisplayName": " Microsoft Office 365 Plan G2 for Government"
+        "licDisplayName": "Microsoft Office 365 Plan G2 for Government"
     },
     {
         "licName": "STANDARDWOFFPACK_IW_FACULTY",
-        "licDisplayName": " Office 365 Education for Faculty"
+        "licDisplayName": "Office 365 Education for Faculty"
     },
     {
         "licName": "STANDARDWOFFPACK_IW_STUDENT",
-        "licDisplayName": " Office 365 Education for Students"
+        "licDisplayName": "Office 365 Education for Students"
     },
     {
         "licName": "STANDARDWOFFPACK_STUDENT",
-        "licDisplayName": " Microsoft Office 365 Plan A2 for Students"
+        "licDisplayName": "Microsoft Office 365 Plan A2 for Students"
     },
     {
         "licName": "STANDARD_B_PILOT",
-        "licDisplayName": " Office 365 (Small Business Preview)"
+        "licDisplayName": "Office 365 (Small Business Preview)"
     },
     {
         "licName": "STREAM",
-        "licDisplayName": " Microsoft Stream"
+        "licDisplayName": "Microsoft Stream"
     },
     {
         "licName": "STREAM_O365_E3",
-        "licDisplayName": " Microsoft Stream for O365 E3 SKU"
+        "licDisplayName": "Microsoft Stream for O365 E3 SKU"
     },
     {
         "licName": "STREAM_O365_E5",
-        "licDisplayName": " Microsoft Stream for O365 E5 SKU"
+        "licDisplayName": "Microsoft Stream for O365 E5 SKU"
     },
     {
         "licName": "SWAY",
-        "licDisplayName": " Sway"
+        "licDisplayName": "Sway"
     },
     {
         "licName": "TEAMS1",
-        "licDisplayName": " Microsoft Teams"
+        "licDisplayName": "Microsoft Teams"
     },
     {
         "licName": "TEAMS_COMMERCIAL_TRIAL",
-        "licDisplayName": " Microsoft Teams Commercial Cloud Trial"
+        "licDisplayName": "Microsoft Teams Commercial Cloud Trial"
     },
     {
         "licName": "THREAT_INTELLIGENCE",
-        "licDisplayName": " Office 365 Threat Intelligence"
+        "licDisplayName": "Office 365 Threat Intelligence"
     },
     {
         "licName": "VIDEO_INTEROP ",
-        "licDisplayName": " Skype Meeting Video Interop for Skype for Business"
+        "licDisplayName": "Skype Meeting Video Interop for Skype for Business"
     },
     {
         "licName": "VISIOCLIENT",
-        "licDisplayName": " Visio Online Plan 2"
+        "licDisplayName": "Visio Online Plan 2"
     },
     {
         "licName": "VISIOONLINE_PLAN1",
-        "licDisplayName": " Visio Online Plan 1"
+        "licDisplayName": "Visio Online Plan 1"
     },
     {
         "licName": "VISIO_CLIENT_SUBSCRIPTION",
-        "licDisplayName": " Visio Pro for Office 365"
+        "licDisplayName": "Visio Pro for Office 365"
     },
     {
         "licName": "WACONEDRIVEENTERPRISE",
-        "licDisplayName": " OneDrive for Business Plan 2"
+        "licDisplayName": "OneDrive for Business Plan 2"
     },
     {
         "licName": "WACONEDRIVESTANDARD",
-        "licDisplayName": " OneDrive for Business with Office Online"
+        "licDisplayName": "OneDrive for Business with Office Online"
     },
     {
         "licName": "WACSHAREPOINTSTD",
-        "licDisplayName": " Office Online STD"
+        "licDisplayName": "Office Online STD"
     },
     {
         "licName": "WHITEBOARD_PLAN3",
-        "licDisplayName": "  White Board Plan 3"
+        "licDisplayName": " White Board Plan 3"
     },
     {
         "licName": "WIN_DEF_ATP",
-        "licDisplayName": " Windows Defender Advanced Threat Protection"
+        "licDisplayName": "Windows Defender Advanced Threat Protection"
     },
     {
         "licName": "WIN10_PRO_ENT_SUB",
-        "licDisplayName": " Windows 10 Enterprise E3"
+        "licDisplayName": "Windows 10 Enterprise E3"
     },
     {
         "licName": "WIN10_VDA_E3",
-        "licDisplayName": " Windows E3"
+        "licDisplayName": "Windows E3"
     },
     {
         "licName": "WIN10_VDA_E5",
-        "licDisplayName": "  Windows E5"
+        "licDisplayName": " Windows E5"
     },
     {
         "licName": "WINDOWS_STORE",
-        "licDisplayName": " Windows Store"
+        "licDisplayName": "Windows Store"
     },
     {
         "licName": "YAMMER_EDU",
-        "licDisplayName": " Yammer for Academic"
+        "licDisplayName": "Yammer for Academic"
     },
     {
         "licName": "YAMMER_ENTERPRISE",
-        "licDisplayName": " Yammer for the Starship Enterprise"
+        "licDisplayName": "Yammer for the Starship Enterprise"
     },
     {
         "licName": "YAMMER_ENTERPRISE_STANDALONE",
-        "licDisplayName": " Yammer Enterprise"
+        "licDisplayName": "Yammer Enterprise"
     },
     {
         "licName": "YAMMER_MIDSIZE",
-        "licDisplayName": " Yammer"
+        "licDisplayName": "Yammer"
     }
 ]
