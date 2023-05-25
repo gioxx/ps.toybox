@@ -198,7 +198,6 @@ function MboxStatistics-Export {
     $folderCSV = $folderCSV.TrimEnd('\')
   }
   $Today = Get-Date -format yyyyMMdd
-  $CSV = SaveFileWithProgressiveNumber("$($folderCSV)\$($Today)_MailboxSize.csv")
 
   $Result=@()
   $ProcessedCount = 0
@@ -211,7 +210,7 @@ function MboxStatistics-Export {
     $Mbox = $_
     $Size = $null
     $ArchiveSize = $null
-    Write-Progress -Activity "Processing $Mbox" -Status "$ProcessedCount out of $TotalMailboxes completed ($($PercentComplete)%)" -PercentComplete $PercentComplete
+    Write-Progress -Activity "Processing $Mbox" -Status "$ProcessedCount out of $TotalMailboxes completed ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
     
     if ( $Mbox.ArchiveDatabase -ne $null) {
       $MailboxArchiveSize = Get-MailboxStatistics $Mbox.UserPrincipalName -Archive
@@ -242,29 +241,19 @@ function MboxStatistics-Export {
      AutoExpandingArchiveEnabled = $Mbox.AutoExpandingArchiveEnabled
     })
   }
+  $CSV = SaveFileWithProgressiveNumber("$($folderCSV)\$($Today)_MailboxSize.csv")
   $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 }
 
 function MsolAccountSku-Export {
   param(
-    [Parameter(Mandatory=$false, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")][string] $folderCSV,
-    [Parameter(Mandatory=$false, HelpMessage="You can specify a single search and export domain (e.g. contoso.com)")][string] $Domain
+    [Parameter(Mandatory=$false, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")][string] $folderCSV
   )
 
   if ( (Get-Module -Name Microsoft.Graph -ListAvailable).count -eq 0 ) {
     Write-Host "Please install the Graph module using this command (then relaunch this script): `nInstall-Module Microsoft.Graph" -f "Yellow"
     exit
-  } else { Connect-MgGraph }
-
-  if ( (Get-Module -Name MSOnline -ListAvailable).count -eq 0 ) {
-    Write-Host "Please install the MSOnline module using this command (then relaunch this script): `nInstall-Module MSOnline" -f "Yellow"
-    exit
-  } else {
-    if ( (Get-Module -Name MSOnline).count -eq 0 ) {
-      Import-Module MSOnline -UseWindowsPowershell -WarningAction Ignore
-    }
-    Connect-MsolService | Out-Null
-  }
+  } else { Connect-MgGraph | Out-Null }
 
   if ( (Get-Module -Name Microsoft.Graph.Users -ListAvailable).count -eq 0 ) {
     Write-Host "Please install the Microsoft.Graph.Users module using this command (then relaunch this script): `nInstall-Module Microsoft.Graph.Users" -f "Yellow"
@@ -282,38 +271,35 @@ function MsolAccountSku-Export {
     $folderCSV = $folderCSV.TrimEnd('\')
   }
   $Today = Get-Date -format yyyyMMdd
-  $CSV = SaveFileWithProgressiveNumber("$($folderCSV)\O365-User-License-Report_$($Today).csv")
   
   $Result=@()
   $ProcessedCount = 0
   $licenseFile = Invoke-RestMethod -Method Get -Uri 'https://raw.githubusercontent.com/gioxx/ps.toybox/main/JSON/M365_licenses.json'
-  if ([string]::IsNullOrEmpty($Domain)) {
-    $Users = Get-MsolUser -All | Where-Object { $_.isLicensed -eq "TRUE" }
-  } else {
-    $CSV = SaveFileWithProgressiveNumber("$($folderCSV)\O365-User-License-Report_$($Domain)_$($Today).csv")
-    $Users = Get-MsolUser -All | Where-Object { $_.isLicensed -eq "TRUE" -and $_.UserPrincipalName -like "*@" + $Domain }
-  }
-  $totalUsers = $Users.Count
+  $Users = Get-MgUser -Filter 'assignedLicenses/$count ne 0' -ConsistencyLevel eventual -CountVariable totalUsers -All
 
   $Users | Foreach-Object {
     $ProcessedCount++
     $PercentComplete = (($ProcessedCount / $totalUsers) * 100)
     $User = $_
-    Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete)%)" -PercentComplete $PercentComplete
-    $GraphLicense = Get-MgUserLicenseDetail -UserId $User.UserPrincipalName
-    ForEach ( $License in $($GraphLicense.SkuPartNumber) ) {
-      ForEach ( $licName in $licenseFile ) {
-        if ( $licName.licName -eq $License ) {
-            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
-             UserName = $User.DisplayName
-             UserPrincipalName = $User.UserPrincipalName
-             Licenses = $licName.licDisplayName
+    Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+    $GraphLicense = Get-MgUserLicenseDetail -UserId $User.Id
+    if ($GraphLicense -ne $null) {
+      ForEach ( $License in $($GraphLicense.SkuPartNumber) ) {
+        ForEach ( $licName in $licenseFile ) {
+          if ( $licName.licName -eq $License ) {
+              $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+              DisplayName = $User.DisplayName
+              UserPrincipalName = $User.UserPrincipalName
+              PrimarySmtpAddress = $User.Mail
+              Licenses = $licName.licDisplayName
             })
-          break
+            break
+          }
         }
       }
     }
   }
+  $CSV = SaveFileWithProgressiveNumber("$($folderCSV)\O365-User-License-Report_$($Today).csv")
   $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 }
 

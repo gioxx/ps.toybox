@@ -4,7 +4,7 @@
 
 @{
   RootModule = '.\Gioxx.ToyBox.psm1'
-  ModuleVersion = '0.2'
+  ModuleVersion = '0.3'
   GUID = '17aadfab-2909-411f-9266-29177b510755'
   Author = 'Gioxx'
   CompanyName = 'Gioxx.org'
@@ -56,7 +56,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview14'
+      Prerelease = 'Preview1'
       RequireLicenseAcceptance = $false
 
       }
