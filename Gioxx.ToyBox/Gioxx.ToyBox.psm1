@@ -19,7 +19,7 @@ function SaveFileWithProgressiveNumber($path)
 
 function ConnectEOL {
   param(
-    [Parameter(Mandatory, HelpMessage="User to connect to Exchange Online with")][string] $UserPrincipalName
+    [Parameter(Mandatory, ValueFromPipeline, HelpMessage="User to connect to Exchange Online with")][string] $UserPrincipalName
   )
   if ( (Get-Module -Name ExchangeOnlineManagement -ListAvailable).count -eq 0 ) {
     Write-Host "Install the ExchangeOnlineManagement module using this command (then relaunch this script): `nInstall-Module ExchangeOnlineManagement" -f "Yellow"
@@ -42,8 +42,8 @@ function ConnectMSOnline {
 
 function ExplodeDDG {
   param(
-    [Parameter(Mandatory, HelpMessage="Dynamic Distribution Group e-mail address or display name")][string] $DDG,
-    [Parameter(Mandatory=$false, HelpMessage="Show results in a grid view")][switch] $GridView
+    [Parameter(Mandatory, ValueFromPipeline, HelpMessage="Dynamic Distribution Group e-mail address or display name")][string] $DDG,
+    [Parameter(Mandatory=$false, ValueFromPipeline, HelpMessage="Show results in a grid view")][switch] $GridView
   )
   if ($GridView) {
     Write-Host "List $($DDG) members using GridView ..."
@@ -73,7 +73,7 @@ function MboxAlias {
 
 function MboxPermission {
   param(
-    [Parameter(Mandatory, HelpMessage="Mailbox e-mail address or display name (e.g. mario.rossi@contoso.com)")][string] $SourceMailbox
+    [Parameter(Mandatory, ValueFromPipeline, HelpMessage="Mailbox e-mail address or display name (e.g. mario.rossi@contoso.com)")][string] $SourceMailbox
   )
   Get-MailboxPermission -Identity $SourceMailbox | Where-Object {$_.user.tostring() -ne "NT AUTHORITY\SELF" -and $_.user.tostring() -NotLike "S-1-5*" -and $_.IsInherited -eq $false} | Select-Object Identity,User,AccessRights | ft -Wrap
   Get-RecipientPermission $SourceMailbox -AccessRights SendAs | Where-Object {$_.Trustee.tostring() -ne "NT AUTHORITY\SELF" -and $_.Trustee.tostring() -NotLike "S-1-5*"} | Select-Object Identity,Trustee,AccessRights | Out-String
@@ -150,7 +150,7 @@ function SharedMbox-New {
 
 function SmtpExpand {
   param(
-    [Parameter(Mandatory, HelpMessage="E-mail address of the mailbox to be analyzed (e.g. info@contoso.com)")][string] $SourceMailbox
+    [Parameter(Mandatory, ValueFromPipeline, HelpMessage="E-mail address of the mailbox to be analyzed (e.g. info@contoso.com)")][string] $SourceMailbox
   )
   Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | Where-Object {$_ -like 'smtp*'}
 }
@@ -170,8 +170,8 @@ function ReloadModule {
 
 function QuarantineRelease {
   param(
-    [Parameter(Mandatory, HelpMessage="Sender's e-mail address locked in quarantine (e.g. mario.rossi@contoso.com)")][string] $SenderAddress,
-    [Parameter(Mandatory=$false, HelpMessage="Unlock emails stuck in quarantine")][switch] $Release
+    [Parameter(Mandatory, ValueFromPipeline, HelpMessage="Sender's e-mail address locked in quarantine (e.g. mario.rossi@contoso.com)")][string] $SenderAddress,
+    [Parameter(Mandatory=$false, ValueFromPipeline, HelpMessage="Unlock emails stuck in quarantine")][switch] $Release
   )
   if ($Release) {
     Write-Host "Release quarantine from known senders: release e-mail(s) from $($SenderAddress) ..."
@@ -188,8 +188,9 @@ function QuarantineRelease {
 
 function MboxStatistics-Export {
   param(
-    [Parameter(Mandatory=$false, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")][string] $folderCSV,
-    [Parameter(Mandatory=$false, HelpMessage="Round up the values of ArchiveWarningQuotaInGB and ArchiveQuotaInGB (by excess).")][switch] $Round
+    [Parameter(Mandatory=$false, ValueFromPipeline, HelpMessage="Single user to analyze (e.g. mario.rossi@contoso.com)")][string] $user,
+    [Parameter(Mandatory=$false, ValueFromPipeline, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")][string] $folderCSV,
+    [Parameter(Mandatory=$false, ValueFromPipeline, HelpMessage="Round up the values of ArchiveWarningQuotaInGB and ArchiveQuotaInGB (by excess).")][switch] $Round
   )
   Set-Variable ProgressPreference Continue
   if ([string]::IsNullOrEmpty($folderCSV)) {
@@ -201,7 +202,7 @@ function MboxStatistics-Export {
 
   $Result=@()
   $ProcessedCount = 0
-  $Mailboxes = Get-Mailbox -ResultSize Unlimited
+  if ([string]::IsNullOrEmpty($user)) { $Mailboxes = Get-Mailbox -ResultSize Unlimited } else { $Mailboxes = Get-Mailbox $user }
   $TotalMailboxes = $Mailboxes.Count
   
   $Mailboxes | Foreach-Object {
@@ -247,7 +248,7 @@ function MboxStatistics-Export {
 
 function MsolAccountSku-Export {
   param(
-    [Parameter(Mandatory=$false, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")][string] $folderCSV
+    [Parameter(Mandatory=$false, ValueFromPipeline, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")][string] $folderCSV
   )
 
   if ( (Get-Module -Name Microsoft.Graph -ListAvailable).count -eq 0 ) {

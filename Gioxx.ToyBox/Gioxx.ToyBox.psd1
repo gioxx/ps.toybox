@@ -56,7 +56,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview1'
+      Prerelease = 'Preview2'
       RequireLicenseAcceptance = $false
 
       }
