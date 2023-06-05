@@ -286,13 +286,13 @@ function MsolAccountSku-Export {
     $GraphLicense = Get-MgUserLicenseDetail -UserId $User.Id
     if ($GraphLicense -ne $null) {
       ForEach ( $License in $($GraphLicense.SkuPartNumber) ) {
-        ForEach ( $licName in $licenseFile ) {
-          if ( $licName.licName -eq $License ) {
+        ForEach ( $LicenseStringId in $licenseFile ) {
+          if ( $LicenseStringId.String_Id -eq $License ) {
               $Result += New-Object -TypeName PSObject -Property $([ordered]@{
               DisplayName = $User.DisplayName
               UserPrincipalName = $User.UserPrincipalName
               PrimarySmtpAddress = $User.Mail
-              Licenses = $licName.licDisplayName
+              Licenses = $LicenseStringId.Product_Display_Name
             })
             break
           }
