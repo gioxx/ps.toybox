@@ -2,11 +2,11 @@
 
 function Export-MboxStatistics {
   param(
-    [Parameter(Mandatory=$False, ValueFromPipeline, HelpMessage="Single user to analyze (e.g. mario.rossi@contoso.com)")]
+    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Single user to analyze (e.g. mario.rossi@contoso.com)")]
     [string] $user,
-    [Parameter(Mandatory=$False, ValueFromPipeline, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")]
+    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")]
     [string] $folderCSV,
-    [Parameter(Mandatory=$False, ValueFromPipeline, HelpMessage="Round up the values of ArchiveWarningQuotaInGB and ArchiveQuotaInGB (by excess).")]
+    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Round up the values of ArchiveWarningQuotaInGB and ArchiveQuotaInGB (by excess).")]
     [switch] $Round
   )
   

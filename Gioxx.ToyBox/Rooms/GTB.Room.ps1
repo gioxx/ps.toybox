@@ -37,7 +37,7 @@ function Get-RoomsDetails {
   }
 
   if ( $GridView ) {
-    $Result | Out-GridView
+    $Result | Out-GridView -Title "M365 Rooms Details"
   } elseif ( $CSV ) {
     $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-Rooms.csv")
     $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"

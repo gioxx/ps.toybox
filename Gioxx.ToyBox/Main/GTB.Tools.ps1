@@ -33,7 +33,7 @@ function priv_CheckMGGraphModule {
     }
 }
 
-function priv_GUI_TextBox ($headerMessage,$defaultText) {
+function priv_GUI_TextBox ($headerMessage, $defaultText) {
     # Credits: https://github.com/n2501r/spiderzebra/blob/master/PowerShell/GUI_Text_Box.ps1
 
     Add-Type -AssemblyName System.Windows.Forms
@@ -100,6 +100,14 @@ function priv_GUI_TextBox ($headerMessage,$defaultText) {
     }
 }
 
+function priv_MaxLenghtSubString($string, $maxchars) {
+    if ($string.Length -gt $maxchars) { 
+        return "$($string.substring(0, $maxchars))..."
+    } else {
+        return $string
+    }
+}
+
 function priv_SaveFileWithProgressiveNumber($path) {
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($path)
     $extension = [System.IO.Path]::GetExtension($path)
@@ -112,4 +120,10 @@ function priv_SaveFileWithProgressiveNumber($path) {
         $count++
     }
     return $path
+}
+
+function priv_TakeDecision($title, $message) {
+    $choices  = '&Yes', '&No'
+    $decision = $Host.UI.PromptForChoice("$($title)", "$($message)", $choices, 0)
+    return $decision
 }

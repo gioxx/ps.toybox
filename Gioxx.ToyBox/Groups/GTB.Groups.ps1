@@ -69,7 +69,7 @@ function Export-DG {
   }
 
   if ( $GridView ) {
-    $Result | Out-GridView
+    $Result | Out-GridView -Title "M365 Distribution Groups"
   } elseif ( $CSV ) {
     $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-DistributionGroups-Report.csv")
     $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
@@ -147,7 +147,7 @@ function Export-DDG {
   }
 
   if ( $GridView ) {
-    $Result | Out-GridView
+    $Result | Out-GridView -Title "M365 Dynamic Distribution Groups"
   } elseif ( $CSV ) {
     $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-DynamicDistributionGroups-Report.csv")
     $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
@@ -225,7 +225,7 @@ function Export-M365Group {
   }
 
   if ( $GridView ) {
-    $Result | Out-GridView
+    $Result | Out-GridView -Title "M365 Unified Groups"
   } elseif ( $CSV ) {
     $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-UnifiedGroups-Report.csv")
     $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
@@ -282,7 +282,7 @@ function Get-UserGroups {
     
   }
   
-  if ( $GridView ) { $groupList | Out-GridView } else { $groupList }
+  if ( $GridView ) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
 }
 
 # Export Modules ===================================================================================================================================================

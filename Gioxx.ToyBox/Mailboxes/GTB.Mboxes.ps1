@@ -7,8 +7,13 @@ function Add-MboxAlias {
     [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Alias to be added (e.g. mario.rossi.alias@contoso.com)")]
     [string] $MailboxAlias
   )
+
+  Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
+    "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+    "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+    Default { Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+  }
  
-  Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"}
   Get-Recipient $SourceMailbox | 
       Select-Object Name -Expand EmailAddresses | 
       Where {$_ -like 'smtp*'}
@@ -330,13 +335,18 @@ function New-SharedMailbox {
 
 function Remove-MboxAlias {
   param(
-    [Parameter(Mandatory=$True, ValueFromPipeline, HelpMessage="User to edit (e.g. mario.rossi)")]
+    [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="User to edit (e.g. mario.rossi)")]
     [string] $SourceMailbox,
-    [Parameter(Mandatory=$True, ValueFromPipeline, HelpMessage="Alias to be removed (e.g. mario.rossi.alias@contoso.com)")]
+    [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Alias to be removed (e.g. mario.rossi.alias@contoso.com)")]
     [string] $MailboxAlias
   )
+
+  Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
+    "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+    "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+    Default { Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+  }
   
-  Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"}
   Get-Recipient $SourceMailbox | 
       Select-Object Name -Expand EmailAddresses | 
       Where {$_ -like 'smtp*'}

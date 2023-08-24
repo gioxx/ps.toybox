@@ -45,11 +45,13 @@
     "Get-MboxAlias",
     "Get-MboxPermission",
     "Get-QuarantineFrom",
+    "Get-QuarantineFromDomain",
     "Get-QuarantineToRelease",
     "Get-RoomsDetails",
     "Get-UserGroups",
     "New-SharedMailbox",
     "Release-QuarantineFrom",
+    "Release-QuarantineMessageId"
     "Remove-MboxAlias",
     "Remove-MboxPermission",
     "Set-MboxRulesQuota",
@@ -71,7 +73,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview5'
+      Prerelease = 'Preview6'
       RequireLicenseAcceptance = $False
 
     }

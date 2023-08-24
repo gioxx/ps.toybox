@@ -269,7 +269,27 @@ function Get-QuarantineFrom {
       try {
         Write-Host "Find e-mail(s) from known senders quarantined: e-mail(s) from $($SenderAddress) not yet released ..."
         Get-QuarantineMessage -SenderAddress $SenderAddress | 
-            ForEach {Get-QuarantineMessage -Identity $_.Identity} | 
+            ForEach { Get-QuarantineMessage -Identity $_.Identity } | 
+            Format-Table -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+      } catch {
+        Write-Error $_.Exception.Message
+      }
+    }
+  }
+}
+
+function Get-QuarantineFromDomain {
+  param(
+    [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Sender's e-mail domain in quarantine (e.g. contoso.com)")]
+    [string[]]$SenderDomain
+  )
+
+  process {
+    ForEach ($CurrentSender in $SenderDomain) {
+      try {
+        Write-Host "Find e-mail(s) from known domains quarantined: e-mail(s) from $($SenderDomain) ..."
+        Get-QuarantineMessage | Where-Object { $_.SenderAddress -like "*@$($SenderDomain)" } | 
+            ForEach { Get-QuarantineMessage -Identity $_.Identity } | 
             Format-Table -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
       } catch {
         Write-Error $_.Exception.Message
@@ -289,20 +309,17 @@ function Get-QuarantineToRelease {
 
   Set-Variable ProgressPreference Continue
 
-  if ($Interval -gt 30) {
-    # Credits: https://stackoverflow.com/a/18311838
-    $Interval = 30
-  } else {
-    $Interval = -$($Interval)
-  }
-
+  if ($Interval -gt 30) { $Interval = 30 } else { $Interval = $($Interval) }
   $Result = @()
-  $ProcessedCount = 0
+  $ReleaseQuarantinePreview = @()
+  $ReleaseQuarantineReleased = @()
+  $ReleaseQuarantineDeleted = @()
+  $MaxFieldLength = 35
   $Page = 1
   
-  $startDate = (Get-Date).AddDays($interval)
+  $startDate = (Get-Date).AddDays(-$Interval)
   $endDate = Get-Date
-  Write-Host "Quarantine analysis with Start Date: $($startDate.Date) • End Date: $($endDate)" -f "Yellow"
+  Write-Host "Quarantine report from $($startDate.Date) to $($endDate)" -f "Yellow"
   
   do {
     # Credits: https://community.spiceworks.com/topic/2343368-merge-eop-quarantine-pages#entry-9354845
@@ -314,18 +331,95 @@ function Get-QuarantineToRelease {
   Write-Host "Total items: $($QuarantinedMessagesAll.Count)" -f "Yellow"
 
   $QuarantinedMessagesAll | ForEach {
-    $ProcessedCount++
-    $PercentComplete = (($ProcessedCount / $($QuarantinedMessagesAll.Count)) * 100)
     $Message = $_
-    Write-Progress -Activity "Processing $($Message.Subject)" -Status "$ProcessedCount out of $($QuarantinedMessagesAll.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
     $Result += New-Object -TypeName PSObject -Property $([ordered]@{
       SenderAddress = $Message.SenderAddress
+      RecipientAddress = $Message.RecipientAddress
       Subject = $Message.Subject
+      ReceivedTime = $Message.ReceivedTime
       QuarantineTypes = $Message.QuarantineTypes
       Released = $Message.Released
+      Identity = $Message.Identity
     })
   }
-  if ( $GridView ) { $Result | Out-GridView } else { $Result }
+
+  if ( $GridView ) {
+    # Credits: https://stackoverflow.com/a/51033908
+    $ReleaseQuarantine = $Result | Sort-Object Subject | Out-GridView -PassThru -Title "$($startDate.Date) to $($endDate) • $($Interval) days • $($QuarantinedMessagesAll.Count) items"
+
+    $ProcessedCount = 0
+    
+    if ( $ReleaseQuarantine -ne $null ) {
+      if ( $ReleaseQuarantine.Count -eq 1 ) {
+        $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Subject)?")
+        if ($decision -eq 0) {
+          Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Release-QuarantineMessage -ReleaseToAll
+          Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Format-Table -AutoSize Subject,SenderAddress,Released,ReleasedUser
+        }
+      } else {
+        $ReleaseQuarantine | ForEach {
+          $QuarantinedMessage = $_
+          $ReleaseQuarantinePreview += New-Object -TypeName PSObject -Property $([ordered]@{
+            Subject = priv_MaxLenghtSubString $QuarantinedMessage.Subject 50
+            SenderAddress = priv_MaxLenghtSubString $QuarantinedMessage.SenderAddress $MaxFieldLength
+            Released = $QuarantinedMessage.Released
+          })
+        }
+        
+        Write-Host "$($ReleaseQuarantine.Count) items selected, take a look at the preview below:" -f "Cyan"
+        $ReleaseQuarantinePreview | Sort-Object Subject | Select-Object Subject,SenderAddress,Released | Out-Host
+
+        $relDel  = '&Release', '&Delete'
+        $release_or_delete = $Host.UI.PromptForChoice("Do you want to release or delete $($ReleaseQuarantine.Count) selected items?", "", $relDel, 0)
+        
+        if ($release_or_delete -eq 1) {
+          # DELETE QUARANTINED EMAILS SELECTED
+          $decision = priv_TakeDecision("Do you really want to permanently delete", "$($ReleaseQuarantine.Count) selected items?")
+          $ReleaseQuarantine | ForEach {
+            if ($decision -eq 0) {
+              $QuarantinedMessageToDelete = Get-QuarantineMessage -Identity $_.Identity
+
+              $ProcessedCount++
+              $PercentComplete = (($ProcessedCount / $ReleaseQuarantine.Count) * 100)
+              Write-Progress -Activity "Deleting $(priv_MaxLenghtSubString $QuarantinedMessageToDelete.Subject $MaxFieldLength)" -Status "$ProcessedCount out of $($ReleaseQuarantine.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+
+              $ReleaseQuarantineDeleted += New-Object -TypeName PSObject -Property $([ordered]@{
+                Subject = priv_MaxLenghtSubString $QuarantinedMessageToDelete.Subject 50
+                SenderAddress = priv_MaxLenghtSubString $QuarantinedMessageToDelete.SenderAddress 50
+              })
+              $QuarantinedMessageToDelete | Delete-QuarantineMessage -Confirm:$false
+            }
+          }
+          Write-Host "Done, please take a look below." -f "Green"
+          $ReleaseQuarantineDeleted | Sort-Object Subject | Select-Object Subject,SenderAddress | Out-Host
+        } else {
+          # RELEASE QUARANTINED EMAILS SELECTED
+          $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Count) selected items?")
+          $ReleaseQuarantine | ForEach {
+            if ($decision -eq 0) {
+              Release-QuarantineMessage -Identity $_.Identity -ReleaseToAll -Confirm:$false
+              $QuarantinedMessageReleased = Get-QuarantineMessage -Identity $_.Identity
+              
+              $ProcessedCount++
+              $PercentComplete = (($ProcessedCount / $ReleaseQuarantine.Count) * 100)
+              Write-Progress -Activity "Processing $(priv_MaxLenghtSubString $QuarantinedMessageReleased.Subject $MaxFieldLength)" -Status "$ProcessedCount out of $($ReleaseQuarantine.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+              
+              $ReleaseQuarantineReleased += New-Object -TypeName PSObject -Property $([ordered]@{
+                Subject = priv_MaxLenghtSubString $QuarantinedMessageReleased.Subject $MaxFieldLength
+                SenderAddress = priv_MaxLenghtSubString $QuarantinedMessageReleased.SenderAddress $MaxFieldLength
+                Released = $QuarantinedMessageReleased.Released
+                ReleasedUser = $QuarantinedMessageReleased.ReleasedUser
+              })
+            }
+          }
+          Write-Host "Done, please take a look below." -f "Green"
+          $ReleaseQuarantineReleased | Sort-Object Subject | Select-Object Subject,SenderAddress,Released,ReleasedUser | Out-Host
+        }
+      }
+    }
+  } else {
+    $Result | Sort-Object Subject | Select-Object SenderAddress,RecipientAddress,Subject,QuarantineTypes,Released
+  }
 }
 
 function Release-QuarantineFrom {
@@ -354,11 +448,41 @@ function Release-QuarantineFrom {
   }
 }
 
+function Release-QuarantineMessageId {
+  param(
+    [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="ID of the message locked in quarantine (e.g. CAH_w85uSio_cz4HsFxJAGQDd-kzxGijLaMagZU95m3A1G8hWBA@mail.contoso.com)")]
+    [string[]]$MessageId
+  )
+
+  process {
+    $MessageId | ForEach {
+      try {
+        $CurrentMessage = "<$($_)>"
+        $ReleaseId = Get-QuarantineMessage -MessageId $CurrentMessage | 
+            Where-Object { $null -ne $_.QuarantinedUser -and $_.ReleaseStatus -ne "RELEASED" }
+        if ( $ReleaseId.Count -ge 1) {
+          $ReleaseId | Release-QuarantineMessage -ReleaseToAll
+          Write-Host "Quarantine message with id $($CurrentMessage) just released ..."
+          Get-QuarantineMessage -MessageId $CurrentMessage | 
+              ForEach { Get-QuarantineMessage -Identity $_.Identity } | 
+              Format-Table -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+        } else {
+          Write-Host "No quarantined messages to release with id $($CurrentMessage) (already released)." -f "Yellow"
+        }
+      } catch {
+        Write-Error $_.Exception.Message
+      }
+    }
+  }
+}
+
 # Export Modules ===================================================================================================================================================
 
 Export-ModuleMember -Function "Export-MFAStatus"
 #Export-ModuleMember -Function "Export-MFAStatusDefaultMethod"
 Export-ModuleMember -Function "Export-QuarantineEML"
 Export-ModuleMember -Function "Get-QuarantineFrom"
+Export-ModuleMember -Function "Get-QuarantineFromDomain"
 Export-ModuleMember -Function "Get-QuarantineToRelease"
 Export-ModuleMember -Function "Release-QuarantineFrom"
+Export-ModuleMember -Function "Release-QuarantineMessageId"
