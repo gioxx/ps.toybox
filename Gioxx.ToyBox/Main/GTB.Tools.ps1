@@ -127,3 +127,11 @@ function priv_TakeDecision($title, $message) {
     $decision = $Host.UI.PromptForChoice("$($title)", "$($message)", $choices, 0)
     return $decision
 }
+
+function priv_TakeDecisionOptions($message, $yes, $no, $yesHint, $noHint, $defaultOption=0) {
+    $option_1 = New-Object System.Management.Automation.Host.ChoiceDescription "$($yes)", "$($yesHint)"
+    $option_2 = New-Object System.Management.Automation.Host.ChoiceDescription "$($no)", "$($noHint)"
+    $options = [System.Management.Automation.Host.ChoiceDescription[]]($option_1, $option_2)
+    $options_result = $Host.UI.PromptForChoice("", $message, $options, $defaultOption)
+    return $options_result
+}
