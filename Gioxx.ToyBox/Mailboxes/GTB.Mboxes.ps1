@@ -239,10 +239,22 @@ function Get-MboxAlias {
     [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="E-mail address of the mailbox to be analyzed (e.g. info@contoso.com)")]
     [string] $SourceMailbox
   )
+  
+  $getAddresses = Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | ForEach-Object {
+    if ($_ -clike 'smtp:*') {
+      [PSCustomObject]@{
+        Primary = $null
+        Alias = $_.Replace('smtp:', '')
+      }
+    } elseif ($_ -clike 'SMTP:*') {
+      [PSCustomObject]@{
+        Primary = $_.Replace('SMTP:', '')
+        Alias = $null
+      }
+    }
+  }
 
-  Get-Recipient $SourceMailbox | 
-      Select-Object Name -Expand EmailAddresses | 
-      Where { $_ -like 'smtp*' }
+  $getAddresses | Format-Table -AutoSize
 }
 
 function Get-MboxPermission {
