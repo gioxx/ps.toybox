@@ -112,11 +112,7 @@ function Set-OoO {
   $ExternalReply = priv_GUI_TextBox "Out of Office message for external addresses (different server)" $InternalReply
 
   try {
-    $AbsenceIntervalMsg = "Do you want to specify an absence interval?"
-    $option_n = New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Continue without specifying a period of absence"
-    $option_y = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Specify a period of absence"
-    $AbsenceIntervalOpt = [System.Management.Automation.Host.ChoiceDescription[]]($option_y, $option_n)
-    $AbsenceIntervalReply = $host.ui.PromptForChoice("", $AbsenceIntervalMsg, $AbsenceIntervalOpt, 1)
+    $AbsenceIntervalReply = priv_TakeDecisionOptions "Do you want to specify an absence interval?" "&Yes" "&No" "Specify a period of absence" "Continue without specifying a period of absence"
     
     if ( $AbsenceIntervalReply -eq 0 ) {
       Write-Host "Now select the first day off in the popup and press enter" -f "Yellow"
