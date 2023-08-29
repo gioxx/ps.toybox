@@ -28,12 +28,12 @@ function Export-MFAStatus {
   $filter = "UserType eq 'member'"
 
   $Users = Get-MgUser -Filter $filter -Property $properties -All | 
-      Where {($_.AssignedLicenses).count -gt 0} | 
+      Where { ($_.AssignedLicenses).count -gt 0 } | 
       Select-Object $select
 
   $Users | ForEach {
     $ProcessedCount++
-    $PercentComplete = (($ProcessedCount / $totalUsers) * 100)
+    $PercentComplete = ( ($ProcessedCount / $totalUsers) * 100 )
     $User = $_
     Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
     
@@ -54,8 +54,8 @@ function Export-MFAStatus {
 
     $MFAData = Get-MgUserAuthenticationMethod -UserId $User.UserPrincipalName -ErrorAction SilentlyContinue
 
-    ForEach ($method in $MFAData) {
-      Switch ($method.AdditionalProperties["@odata.type"]) {
+    ForEach ( $method in $MFAData ) {
+      Switch ( $method.AdditionalProperties["@odata.type"] ) {
         "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod" { 
           # Microsoft Authenticator App
           $MFAMethods.authApp = $True
@@ -111,7 +111,7 @@ function Export-MFAStatus {
       }
     }
 
-    if ($All) {
+    if ( $All ) {
       $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
         Name = $User.DisplayName
         "Email Address" = $User.mail
@@ -129,7 +129,7 @@ function Export-MFAStatus {
         "Recovery email" = $MFAMethods.SSPREmail
       })
     } else {
-      if ($MFAMethods.status -eq "enabled") {
+      if ( $MFAMethods.status -eq "enabled" ) {
         $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
           Name = $User.DisplayName
           "Email Address" = $User.mail
@@ -166,33 +166,33 @@ function Export-MFAStatusDefaultMethod {
   Set-Variable ProgressPreference Continue
   $folder = priv_CheckFolder($folderCSV)
 
-  if (-not (Get-MsolDomain -ErrorAction SilentlyContinue)) {
+  if ( -not (Get-MsolDomain -ErrorAction SilentlyContinue) ) {
     Write-Error "You must connect to the MSolService to continue" -ErrorAction Stop
   }
 
   $Result = @()
   $ProcessedCount = 0
   $MsolUserList = Get-MsolUser -All -ErrorAction Stop | 
-      Where {$_.UserType -ne 'Guest' -And $_.DisplayName -notmatch 'On-Premises Directory Synchronization'}
+      Where { $_.UserType -ne 'Guest' -And $_.DisplayName -notmatch 'On-Premises Directory Synchronization' }
   $totalUsers = $MsolUserList.Count
 
-  ForEach ($User in $MsolUserList) {
+  ForEach ( $User in $MsolUserList ) {
     $ProcessedCount++
-    $PercentComplete = (($ProcessedCount / $totalUsers) * 100)
+    $PercentComplete = ( ($ProcessedCount / $totalUsers) * 100 )
     Write-Progress -Activity "Processing $User" -Status "$ProcessedCount out of $totalUsers completed ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
     
-    if ($User.StrongAuthenticationRequirements) {
+    if ( $User.StrongAuthenticationRequirements ) {
       $PerUserMFAState = $User.StrongAuthenticationRequirements.State
     } else {
       $PerUserMFAState = 'Disabled'
     }
 
     $MethodType = $User.StrongAuthenticationMethods | 
-        Where {$_.IsDefault -eq $True} | 
+        Where { $_.IsDefault -eq $True } | 
         Select-Object -ExpandProperty MethodType
 
-    if ($MethodType) {
-      switch ($MethodType) {
+    if ( $MethodType ) {
+      switch ( $MethodType ) {
         'OneWaySMS' {$DefaultMethodType = 'SMS Text Message'}
         'TwoWayVoiceMobile' {$DefaultMethodType = 'Call to Phone'}
         'PhoneAppOTP' {$DefaultMethodType = 'TOTP'}
@@ -202,7 +202,7 @@ function Export-MFAStatusDefaultMethod {
       $DefaultMethodType = 'Not Enabled'
     }
 
-    if ($All) {
+    if ( $All ) {
       $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
         UserPrincipalName = $User.UserPrincipalName
         DisplayName = $User.DisplayName
@@ -212,7 +212,7 @@ function Export-MFAStatusDefaultMethod {
       
       $MethodType = $null
     } else {
-      if (!($PerUserMFAState -eq 'Disabled')) {
+      if ( !($PerUserMFAState -eq 'Disabled') ) {
         $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
           UserPrincipalName = $User.UserPrincipalName
           DisplayName = $User.DisplayName
@@ -230,14 +230,14 @@ function Export-MFAStatusDefaultMethod {
 
 function Export-QuarantineEML {
   param(
-    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Folder where export the EML file (e.g. C:\Temp)")]
-    [string] $folder,
     [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="The ID of the message to be exported (example: 20230617142935.F5B74194B266E458@contoso.com)")]
-    [string]$messageID
+    [string]$messageID,
+    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Folder where export the EML file (e.g. C:\Temp)")]
+    [string] $folder
   )
   
-  if (-not($messageID.StartsWith('<'))) { $messageID = '<' + $messageID }
-  if (-not($messageID.EndsWith('>'))) { $messageID += '>' }
+  if ( -not($messageID.StartsWith('<')) ) { $messageID = '<' + $messageID }
+  if ( -not($messageID.EndsWith('>')) ) { $messageID += '>' }
   $exportFolder = priv_CheckFolder($folder)
 
   $e = Get-QuarantineMessage -MessageId $($messageID) | 
@@ -247,14 +247,12 @@ function Export-QuarantineEML {
   Start-Sleep -s 3
   Remove-Item "$($exportFolder)\QuarantineEML.eml"
   
-  $message = "Should I release the message to all recipients?"
-  $option_y = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Release message."
-  $option_n = New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Do not release the message."
-  $options = [System.Management.Automation.Host.ChoiceDescription[]]($option_y, $option_n)
-  $options_result = $host.ui.PromptForChoice("", $message, $options, 0)
+  $options_result = priv_TakeDecisionOptions "Should I release the message to all recipients?" "&Yes" "&No" "Release message." "Do not release the message." 1
   if ($options_result -eq 0) {
     Get-QuarantineMessage -MessageId $($messageID) | 
-        Release-QuarantineMessage -ReleaseToAll
+      Release-QuarantineMessage -ReleaseToAll
+  } else {
+    Write-Host "Operation canceled (Aborted by user)." -f "Yellow"
   }
 }
 
@@ -265,7 +263,7 @@ function Get-QuarantineFrom {
   )
 
   process {
-    ForEach ($CurrentSender in $SenderAddress) {
+    ForEach ( $CurrentSender in $SenderAddress ) {
       try {
         Write-Host "Find e-mail(s) from known senders quarantined: e-mail(s) from $($SenderAddress) not yet released ..."
         Get-QuarantineMessage -SenderAddress $SenderAddress | 
@@ -285,7 +283,7 @@ function Get-QuarantineFromDomain {
   )
 
   process {
-    ForEach ($CurrentSender in $SenderDomain) {
+    ForEach ( $CurrentSender in $SenderDomain ) {
       try {
         Write-Host "Find e-mail(s) from known domains quarantined: e-mail(s) from $($SenderDomain) ..."
         Get-QuarantineMessage | Where-Object { $_.SenderAddress -like "*@$($SenderDomain)" } | 
@@ -309,12 +307,11 @@ function Get-QuarantineToRelease {
 
   Set-Variable ProgressPreference Continue
 
-  if ($Interval -gt 30) { $Interval = 30 } else { $Interval = $($Interval) }
+  if ( $Interval -gt 30 ) { $Interval = 30 } else { $Interval = $($Interval) }
   $Result = @()
   $ReleaseQuarantinePreview = @()
   $ReleaseQuarantineReleased = @()
   $ReleaseQuarantineDeleted = @()
-  $MaxFieldLength = 35
   $Page = 1
   
   $startDate = (Get-Date).AddDays(-$Interval)
@@ -345,16 +342,28 @@ function Get-QuarantineToRelease {
 
   if ( $GridView ) {
     # Credits: https://stackoverflow.com/a/51033908
-    $ReleaseQuarantine = $Result | Sort-Object Subject | Out-GridView -PassThru -Title "$($startDate.Date) to $($endDate) • $($Interval) days • $($QuarantinedMessagesAll.Count) items"
+    $ReleaseQuarantine = $Result | Sort-Object -Descending ReceivedTime | Out-GridView -Title "$($startDate.Date) to $($endDate) • $($Interval) days • $($QuarantinedMessagesAll.Count) items" -PassThru
 
     $ProcessedCount = 0
     
     if ( $ReleaseQuarantine -ne $null ) {
       if ( $ReleaseQuarantine.Count -eq 1 ) {
-        $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Subject)?")
+        # $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Subject)?")
+        $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Subject)?" "&Yes" "&No" "Release message(s)." "Do not release message(s)."
         if ($decision -eq 0) {
-          Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Release-QuarantineMessage -ReleaseToAll
-          Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Format-Table -AutoSize Subject,SenderAddress,Released,ReleasedUser
+          # Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Release-QuarantineMessage -ReleaseToAll
+          # Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Format-Table -AutoSize Subject,SenderAddress,Released,ReleasedUser
+          Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -Confirm:$false
+          $released = Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity
+          
+          $releasedResults = @()
+          $releasedResults += New-Object -TypeName PSObject -Property $([ordered]@{
+            Subject = priv_MaxLenghtSubString $released.Subject 40
+            SenderAddress = priv_MaxLenghtSubString $released.SenderAddress $MaxFieldLength
+            Released = $released.Released
+            ReleasedUser = $released.ReleasedUser
+          })
+          $releasedResults | Sort-Object Subject | Select-Object Subject,SenderAddress,Released,ReleasedUser | Out-Host
         }
       } else {
         $ReleaseQuarantine | ForEach {
@@ -366,21 +375,23 @@ function Get-QuarantineToRelease {
           })
         }
         
-        Write-Host "$($ReleaseQuarantine.Count) items selected, take a look at the preview below:" -f "Cyan"
+        ""; Write-Host "$($ReleaseQuarantine.Count) items selected, take a look at the preview below:" -f "Cyan"
         $ReleaseQuarantinePreview | Sort-Object Subject | Select-Object Subject,SenderAddress,Released | Out-Host
 
-        $relDel  = '&Release', '&Delete'
-        $release_or_delete = $Host.UI.PromptForChoice("Do you want to release or delete $($ReleaseQuarantine.Count) selected items?", "", $relDel, 0)
+        # $relDel  = '&Release', '&Delete'
+        # $release_or_delete = $Host.UI.PromptForChoice("Do you want to release or delete $($ReleaseQuarantine.Count) selected items?", "", $relDel, 0)
+        $release_or_delete = priv_TakeDecisionOptions "Do you want to release or delete $($ReleaseQuarantine.Count) selected items?" "&Release" "&Delete" "Release messages" "Delete messages"
         
-        if ($release_or_delete -eq 1) {
+        if ( $release_or_delete -eq 1 ) {
           # DELETE QUARANTINED EMAILS SELECTED
-          $decision = priv_TakeDecision("Do you really want to permanently delete", "$($ReleaseQuarantine.Count) selected items?")
+          # $decision = priv_TakeDecision("Do you really want to permanently delete", "$($ReleaseQuarantine.Count) selected items?")
+          $decision = priv_TakeDecisionOptions "Do you really want to permanently delete $($ReleaseQuarantine.Count) selected items?" "&Yes" "&No" "Delete message(s)." "Do not delete message(s)."
           $ReleaseQuarantine | ForEach {
             if ($decision -eq 0) {
               $QuarantinedMessageToDelete = Get-QuarantineMessage -Identity $_.Identity
 
               $ProcessedCount++
-              $PercentComplete = (($ProcessedCount / $ReleaseQuarantine.Count) * 100)
+              $PercentComplete = ( ($ProcessedCount / $ReleaseQuarantine.Count) * 100 )
               Write-Progress -Activity "Deleting $(priv_MaxLenghtSubString $QuarantinedMessageToDelete.Subject $MaxFieldLength)" -Status "$ProcessedCount out of $($ReleaseQuarantine.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
               $ReleaseQuarantineDeleted += New-Object -TypeName PSObject -Property $([ordered]@{
@@ -394,9 +405,10 @@ function Get-QuarantineToRelease {
           $ReleaseQuarantineDeleted | Sort-Object Subject | Select-Object Subject,SenderAddress | Out-Host
         } else {
           # RELEASE QUARANTINED EMAILS SELECTED
-          $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Count) selected items?")
+          # $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Count) selected items?")
+          $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Count) selected items?" "&Yes" "&No" "Release message(s)." "Do not release message(s)."
           $ReleaseQuarantine | ForEach {
-            if ($decision -eq 0) {
+            if ( $decision -eq 0 ) {
               Release-QuarantineMessage -Identity $_.Identity -ReleaseToAll -Confirm:$false
               $QuarantinedMessageReleased = Get-QuarantineMessage -Identity $_.Identity
               
@@ -429,6 +441,7 @@ function Release-QuarantineFrom {
   )
 
   process {
+    $releasedResults = @()
     $SenderAddress | ForEach {
       try {
         $CurrentSender = $_
@@ -437,10 +450,18 @@ function Release-QuarantineFrom {
             ForEach { Get-QuarantineMessage -Identity $_.Identity } | 
             Where-Object { $null -ne $_.QuarantinedUser -and $_.ReleaseStatus -ne "RELEASED" } | 
             Release-QuarantineMessage -ReleaseToAll
-        Write-Host "Release quarantine from known senders: verifying e-mail(s) from $($CurrentSender) just released ..."
         Get-QuarantineMessage -SenderAddress $CurrentSender | 
-            ForEach { Get-QuarantineMessage -Identity $_.Identity } | 
-            Format-Table -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+          ForEach { 
+            $released = Get-QuarantineMessage -Identity $_.Identity
+            $row = "" | Select-Object Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+            $row.Subject = priv_MaxLenghtSubString $released.Subject 40
+            $row.SenderAddress = $released.SenderAddress
+            $row.ReceivedTime = $released.ReceivedTime
+            $row.Released = $released.Released
+            $row.ReleasedUser = $released.ReleasedUser
+            $releasedResults += $row
+          } 
+        $releasedResults | Format-Table -AutoSize
       } catch {
         Write-Error $_.Exception.Message
       }
@@ -455,6 +476,7 @@ function Release-QuarantineMessageId {
   )
 
   process {
+    $releasedResults = @()
     $MessageId | ForEach {
       try {
         $CurrentMessage = "<$($_)>"
@@ -462,12 +484,21 @@ function Release-QuarantineMessageId {
             Where-Object { $null -ne $_.QuarantinedUser -and $_.ReleaseStatus -ne "RELEASED" }
         if ( $ReleaseId.Count -ge 1) {
           $ReleaseId | Release-QuarantineMessage -ReleaseToAll
-          Write-Host "Quarantine message with id $($CurrentMessage) just released ..."
+          Write-Host "Release quarantine message with id $($CurrentMessage) ..."
           Get-QuarantineMessage -MessageId $CurrentMessage | 
-              ForEach { Get-QuarantineMessage -Identity $_.Identity } | 
-              Format-Table -AutoSize Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+            ForEach { 
+              $released = Get-QuarantineMessage -Identity $_.Identity
+              $row = "" | Select-Object Subject,SenderAddress,ReceivedTime,Released,ReleasedUser
+              $row.Subject = priv_MaxLenghtSubString $released.Subject 40
+              $row.SenderAddress = $released.SenderAddress
+              $row.ReceivedTime = $released.ReceivedTime
+              $row.Released = $released.Released
+              $row.ReleasedUser = $released.ReleasedUser
+              $releasedResults += $row
+            }
+          $releasedResults | Format-Table -AutoSize
         } else {
-          Write-Host "No quarantined messages to release with id $($CurrentMessage) (already released)." -f "Yellow"
+          Write-Host "No quarantined messages to release with id $($CurrentMessage) (cause already released)." -f "Yellow"
         }
       } catch {
         Write-Error $_.Exception.Message
