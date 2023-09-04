@@ -10,27 +10,40 @@ function priv_CheckFolder($path) {
 }
 
 function priv_CheckMGGraphModule {
-    if ( (Get-Module -Name Microsoft.Graph -ListAvailable).count -eq 0 ) {
+    $mggConnected = $false
+
+    if ( (Get-Module -Name Microsoft.Graph -ListAvailable).count -gt 0 ) {
+        try {
+            Get-MgUser -ErrorAction Stop
+        } catch {
+            Write-Host "Please wait until I load Microsoft Graph, the operation can take a minute or more." -f "Yellow"
+            Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
+            Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
+            Connect-MgGraph
+            $mggConnected = $true
+        }
+    } else {
         Write-Host "Microsoft Graph PowerShell module is not available."  -f "Yellow" 
         $Confirm = Read-Host "Are you sure you want to install module? [Y] Yes [N] No "
         if ( $Confirm -match "[yY]" ) {
-            Write-host "Installing Microsoft Graph PowerShell module ..."
-            Install-Module Microsoft.Graph -Repository PSGallery -Scope CurrentUser -AllowClobber -Force
+            try {
+                Write-host "Installing Microsoft Graph PowerShell module ..."
+                Install-Module Microsoft.Graph -Repository PSGallery -Scope CurrentUser -AllowClobber -Force
+                Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
+                Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
+                Connect-MgGraph
+                $mggConnected = $true
+            } catch {
+                ""; Write-Host "Can't install and import Graph Modules. `nPlease check logs." -f "Red"
+                exit
+            }
         } else {
-            Write-Host "Microsoft Graph PowerShell module is required to run this script. `nPlease install module using Install-Module Microsoft.Graph cmdlet."
+            ""; Write-Host "Microsoft Graph PowerShell module is required to run this script. `nPlease install module using Install-Module Microsoft.Graph cmdlet." -f "Red"
             exit
         }
-    } else { 
-        try {
-            Get-MgProfile | Out-Null
-        } catch {
-            Write-Host "Please wait until I load Microsoft Graph, the operation can take a minute or more." -f "Yellow"
-            Import-Module Microsoft.Graph
-            Import-Module Microsoft.Graph.Users
-            #Connect-MgGraph -ErrorAction SilentlyContinue
-            Connect-MgGraph
-        }
     }
+
+    return $mggConnected
 }
 
 function priv_GUI_TextBox ($headerMessage, $defaultText) {

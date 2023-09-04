@@ -14,127 +14,111 @@ function Export-MFAStatus {
   
   Set-Variable ProgressPreference Continue
   $folder = priv_CheckFolder($folderCSV)
-  priv_CheckMGGraphModule
-  $Result = @()
-  $ProcessedCount = 0
+  
+  $mggConnectedCheck = priv_CheckMGGraphModule
+  if ( $mggConnectedCheck -eq $true ) {
+    $Result = @()
+    $ProcessedCount = 0
 
-  $select = @(
-    'id',
-    'DisplayName',
-    'userprincipalname',
-    'mail'
-  )
-  $properties = $select + "AssignedLicenses"
-  $filter = "UserType eq 'member'"
+    $select = @(
+      'id',
+      'DisplayName',
+      'userprincipalname',
+      'mail'
+    )
+    $properties = $select + "AssignedLicenses"
+    $filter = "UserType eq 'member'"
 
-  $Users = Get-MgUser -Filter $filter -Property $properties -All | 
+    $Users = Get-MgUser -Filter $filter -Property $properties -All | 
       Where { ($_.AssignedLicenses).count -gt 0 } | 
       Select-Object $select
 
-  $Users | ForEach {
-    $ProcessedCount++
-    $PercentComplete = ( ($ProcessedCount / $totalUsers) * 100 )
-    $User = $_
-    Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
-    
-    $MFAMethods = [PSCustomObject][Ordered]@{
-      status = ""
-      authApp = ""
-      phoneAuth = ""
-      fido = ""
-      helloForBusiness = ""
-      emailAuth = ""
-      tempPass = ""
-      passwordLess = ""
-      softwareAuth = ""
-      authDevice = ""
-      authPhoneNr = ""
-      SSPREmail = ""
-    }
+    $Users | ForEach {
+      $ProcessedCount++
+      $PercentComplete = ( ($ProcessedCount / $totalUsers) * 100 )
+      $User = $_
+      Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+      
+      $MFAMethods = [PSCustomObject][Ordered]@{
+        status = ""
+        authApp = ""
+        phoneAuth = ""
+        fido = ""
+        helloForBusiness = ""
+        emailAuth = ""
+        tempPass = ""
+        passwordLess = ""
+        softwareAuth = ""
+        authDevice = ""
+        authPhoneNr = ""
+        SSPREmail = ""
+      }
 
-    $MFAData = Get-MgUserAuthenticationMethod -UserId $User.UserPrincipalName -ErrorAction SilentlyContinue
+      $MFAData = Get-MgUserAuthenticationMethod -UserId $User.UserPrincipalName -ErrorAction SilentlyContinue
 
-    ForEach ( $method in $MFAData ) {
-      Switch ( $method.AdditionalProperties["@odata.type"] ) {
-        "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod" { 
-          # Microsoft Authenticator App
-          $MFAMethods.authApp = $True
-          $MFAMethods.authDevice = $method.AdditionalProperties["displayName"] 
-          $MFAMethods.status = "enabled"
-        } 
-        "#microsoft.graph.phoneAuthenticationMethod" { 
-          # Phone authentication
-          $MFAMethods.phoneAuth = $True
-          $MFAMethods.authPhoneNr = $method.AdditionalProperties["phoneType", "phoneNumber"] -join ' '
-          $MFAMethods.status = "enabled"
-        } 
-        "#microsoft.graph.fido2AuthenticationMethod" { 
-          # FIDO2 key
-          $MFAMethods.fido = $True
-          $fifoDetails = $method.AdditionalProperties["model"]
-          $MFAMethods.status = "enabled"
-        } 
-        "#microsoft.graph.passwordAuthenticationMethod" { 
-          # Password
-          # When only the password is set, then MFA is disabled.
-          if ($MFAMethods.status -ne "enabled") {$MFAMethods.status = "disabled"}
-        }
-        "#microsoft.graph.windowsHelloForBusinessAuthenticationMethod" { 
-          # Windows Hello
-          $MFAMethods.helloForBusiness = $True
-          $helloForBusinessDetails = $method.AdditionalProperties["displayName"]
-          $MFAMethods.status = "enabled"
-        } 
-        "#microsoft.graph.emailAuthenticationMethod" { 
-          # Email Authentication
-          $MFAMethods.emailAuth =  $True
-          $MFAMethods.SSPREmail = $method.AdditionalProperties["emailAddress"] 
-          $MFAMethods.status = "enabled"
-        }               
-        "microsoft.graph.temporaryAccessPassAuthenticationMethod" { 
-          # Temporary Access pass
-          $MFAMethods.tempPass = $True
-          $tempPassDetails = $method.AdditionalProperties["lifetimeInMinutes"]
-          $MFAMethods.status = "enabled"
-        }
-        "#microsoft.graph.passwordlessMicrosoftAuthenticatorAuthenticationMethod" { 
-          # Passwordless
-          $MFAMethods.passwordLess = $True
-          $passwordLessDetails = $method.AdditionalProperties["displayName"]
-          $MFAMethods.status = "enabled"
-        }
-        "#microsoft.graph.softwareOathAuthenticationMethod" { 
-          # ThirdPartyAuthenticator
-          $MFAMethods.softwareAuth = $True
-          $MFAMethods.status = "enabled"
+      ForEach ( $method in $MFAData ) {
+        Switch ( $method.AdditionalProperties["@odata.type"] ) {
+          "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod" { 
+            # Microsoft Authenticator App
+            $MFAMethods.authApp = $True
+            $MFAMethods.authDevice = $method.AdditionalProperties["displayName"] 
+            $MFAMethods.status = "enabled"
+          } 
+          "#microsoft.graph.phoneAuthenticationMethod" { 
+            # Phone authentication
+            $MFAMethods.phoneAuth = $True
+            $MFAMethods.authPhoneNr = $method.AdditionalProperties["phoneType", "phoneNumber"] -join ' '
+            $MFAMethods.status = "enabled"
+          } 
+          "#microsoft.graph.fido2AuthenticationMethod" { 
+            # FIDO2 key
+            $MFAMethods.fido = $True
+            $fifoDetails = $method.AdditionalProperties["model"]
+            $MFAMethods.status = "enabled"
+          } 
+          "#microsoft.graph.passwordAuthenticationMethod" { 
+            # Password
+            # When only the password is set, then MFA is disabled.
+            if ($MFAMethods.status -ne "enabled") {$MFAMethods.status = "disabled"}
+          }
+          "#microsoft.graph.windowsHelloForBusinessAuthenticationMethod" { 
+            # Windows Hello
+            $MFAMethods.helloForBusiness = $True
+            $helloForBusinessDetails = $method.AdditionalProperties["displayName"]
+            $MFAMethods.status = "enabled"
+          } 
+          "#microsoft.graph.emailAuthenticationMethod" { 
+            # Email Authentication
+            $MFAMethods.emailAuth =  $True
+            $MFAMethods.SSPREmail = $method.AdditionalProperties["emailAddress"] 
+            $MFAMethods.status = "enabled"
+          }               
+          "microsoft.graph.temporaryAccessPassAuthenticationMethod" { 
+            # Temporary Access pass
+            $MFAMethods.tempPass = $True
+            $tempPassDetails = $method.AdditionalProperties["lifetimeInMinutes"]
+            $MFAMethods.status = "enabled"
+          }
+          "#microsoft.graph.passwordlessMicrosoftAuthenticatorAuthenticationMethod" { 
+            # Passwordless
+            $MFAMethods.passwordLess = $True
+            $passwordLessDetails = $method.AdditionalProperties["displayName"]
+            $MFAMethods.status = "enabled"
+          }
+          "#microsoft.graph.softwareOathAuthenticationMethod" { 
+            # ThirdPartyAuthenticator
+            $MFAMethods.softwareAuth = $True
+            $MFAMethods.status = "enabled"
+          }
         }
       }
-    }
 
-    if ( $All ) {
-      $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
-        Name = $User.DisplayName
-        "Email Address" = $User.mail
-        UserPrincipalName = $User.UserPrincipalName
-        "MFA Status" = $MFAMethods.status
-      # "MFA Default type" = ""  - Not yet supported by MgGraph
-        "Phone Authentication" = $MFAMethods.phoneAuth
-        "Authenticator App" = $MFAMethods.authApp
-        "Passwordless" = $MFAMethods.passwordLess
-        "Hello for Business" = $MFAMethods.helloForBusiness
-        "FIDO2 Security Key" = $MFAMethods.fido
-        "Temporary Access Pass" = $MFAMethods.tempPass
-        "Authenticator device" = $MFAMethods.authDevice
-        "Phone number" = $MFAMethods.authPhoneNr
-        "Recovery email" = $MFAMethods.SSPREmail
-      })
-    } else {
-      if ( $MFAMethods.status -eq "enabled" ) {
+      if ( $All ) {
         $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
           Name = $User.DisplayName
           "Email Address" = $User.mail
           UserPrincipalName = $User.UserPrincipalName
-        # "MFA Status" = $MFAMethods.status - It's unnecessary because in this case you filter out only those who have it active
+          "MFA Status" = $MFAMethods.status
         # "MFA Default type" = ""  - Not yet supported by MgGraph
           "Phone Authentication" = $MFAMethods.phoneAuth
           "Authenticator App" = $MFAMethods.authApp
@@ -145,13 +129,36 @@ function Export-MFAStatus {
           "Authenticator device" = $MFAMethods.authDevice
           "Phone number" = $MFAMethods.authPhoneNr
           "Recovery email" = $MFAMethods.SSPREmail
-        }) 
+        })
+      } else {
+        if ( $MFAMethods.status -eq "enabled" ) {
+          $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
+            Name = $User.DisplayName
+            "Email Address" = $User.mail
+            UserPrincipalName = $User.UserPrincipalName
+          # "MFA Status" = $MFAMethods.status - It's unnecessary because in this case you filter out only those who have it active
+          # "MFA Default type" = ""  - Not yet supported by MgGraph
+            "Phone Authentication" = $MFAMethods.phoneAuth
+            "Authenticator App" = $MFAMethods.authApp
+            "Passwordless" = $MFAMethods.passwordLess
+            "Hello for Business" = $MFAMethods.helloForBusiness
+            "FIDO2 Security Key" = $MFAMethods.fido
+            "Temporary Access Pass" = $MFAMethods.tempPass
+            "Authenticator device" = $MFAMethods.authDevice
+            "Phone number" = $MFAMethods.authPhoneNr
+            "Recovery email" = $MFAMethods.SSPREmail
+          }) 
+        }
       }
+
     }
 
+    $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MFA-Status-Report.csv")
+    $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs." -f "Red"
   }
-  $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MFA-Status-Report.csv")
-  $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 }
 
 function Export-MFAStatusDefaultMethod {

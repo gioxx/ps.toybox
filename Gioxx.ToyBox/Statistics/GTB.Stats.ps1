@@ -78,37 +78,44 @@ function Export-MsolAccountSku {
   Set-Variable ProgressPreference Continue
   $folder = priv_CheckFolder($folderCSV)
 
-  priv_CheckMGGraphModule
-  
-  $Result = @()
-  $ProcessedCount = 0
-  $licenseFile = Invoke-RestMethod -Method Get -Uri $GTBVars.LicensesJSON
-  $Users = Get-MgUser -Filter 'assignedLicenses/$count ne 0' -ConsistencyLevel eventual -CountVariable totalUsers -All
+  $mggConnectedCheck = priv_CheckMGGraphModule
+  if ( $mggConnectedCheck -eq $true ) {
+    $Result = @()
+    $ProcessedCount = 0
+    $licenseFile = Invoke-RestMethod -Method Get -Uri $GTBVars.LicensesJSON
+    $Users = Get-MgUser -Filter 'assignedLicenses/$count ne 0' -ConsistencyLevel eventual -CountVariable totalUsers -All
 
-  $Users | ForEach {
-    $ProcessedCount++
-    $PercentComplete = (($ProcessedCount / $totalUsers) * 100)
-    $User = $_
-    Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
-    $GraphLicense = Get-MgUserLicenseDetail -UserId $User.Id
-    if ($GraphLicense -ne $null) {
-      ForEach ( $License in $($GraphLicense.SkuPartNumber) ) {
-        ForEach ( $LicenseStringId in $licenseFile ) {
-          if ( $LicenseStringId.String_Id -eq $License ) {
-              $Result += New-Object -TypeName PSObject -Property $([ordered]@{
-              DisplayName = $User.DisplayName
-              UserPrincipalName = $User.UserPrincipalName
-              PrimarySmtpAddress = $User.Mail
-              Licenses = $LicenseStringId.Product_Display_Name
-            })
-            break
+    $Users | ForEach {
+      $ProcessedCount++
+      $PercentComplete = (($ProcessedCount / $totalUsers) * 100)
+      $User = $_
+      Write-Progress -Activity "Processing $($User.DisplayName)" -Status "$ProcessedCount out of $totalUsers ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+      $GraphLicense = Get-MgUserLicenseDetail -UserId $User.Id
+      if ($GraphLicense -ne $null) {
+        ForEach ( $License in $($GraphLicense.SkuPartNumber) ) {
+          ForEach ( $LicenseStringId in $licenseFile ) {
+            if ( $LicenseStringId.String_Id -eq $License ) {
+                $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+                DisplayName = $User.DisplayName
+                UserPrincipalName = $User.UserPrincipalName
+                PrimarySmtpAddress = $User.Mail
+                Licenses = $LicenseStringId.Product_Display_Name
+              })
+              break
+            }
           }
         }
       }
     }
+    
+    $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-User-License-Report.csv")
+    $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs." -f "Red"
   }
-  $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-User-License-Report.csv")
-  $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+  
+  
 }
 
 # Export Modules ===================================================================================================================================================

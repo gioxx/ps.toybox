@@ -243,46 +243,50 @@ function Get-UserGroups {
     [switch] $GridView
   )
 
-  priv_CheckMGGraphModule
+  $mggConnectedCheck = priv_CheckMGGraphModule
+  if ( $mggConnectedCheck -eq $true ) {
+    $groupList=@()
 
-  $groupList=@()
+    if ( $UserPrincipalName -notcontains "@" ) {
+      #Write-Host "DEBUG: PrimarySmtpAddress not specified, searching $($UserPrincipalName)'s PrimarySmtpAddress ..." -f "Yellow"
+      $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
+    }
 
-  if ( $UserPrincipalName -notcontains "@" ) {
-    #Write-Host "DEBUG: PrimarySmtpAddress not specified, searching $($UserPrincipalName)'s PrimarySmtpAddress ..." -f "Yellow"
-    $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
-  }
+    if ( (Get-Recipient $UserPrincipalName | Select RecipientTypeDetails) -ne "UserMailbox" ) {
+      # Se la casella non è personale, allora l'utente da passare a MgUser è quello del WindowsLiveID.
+      $UserPrincipalName = ( Get-Recipient $UserPrincipalName).WindowsLiveID
+    }
 
-  if ( (Get-Recipient $UserPrincipalName | Select RecipientTypeDetails) -ne "UserMailbox" ) {
-    # Se la casella non è personale, allora l'utente da passare a MgUser è quello del WindowsLiveID.
-    $UserPrincipalName = ( Get-Recipient $UserPrincipalName).WindowsLiveID
-  }
+    $userID = Get-MgUser -UserId $UserPrincipalName
+    $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
+    
+    $groups | ForEach {
+      $groupIDs = $_.id
+      $otherproperties = $_.AdditionalProperties
 
-  $userID = Get-MgUser -UserId $UserPrincipalName
-  $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
-  
-  $groups | ForEach {
-    $groupIDs = $_.id
-    $otherproperties = $_.AdditionalProperties
-
-    if ( $GridView ) {
-      $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
-        "Group Name" = $otherproperties.displayName
-        "Group Description" = $otherproperties.description
-        "Group Mail" = $otherproperties.mail
-        "Group Mail Nickname" = $otherproperties.mailNickname
-        "Group Mail Enabled" = $otherproperties.mailEnabled
-        "Group ID" = $groupIDs
-      })
-    } else {
-      $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
-        "Group Name" = $otherproperties.displayName
-        "Group Mail" = $otherproperties.mail
-      })
+      if ( $GridView ) {
+        $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
+          "Group Name" = $otherproperties.displayName
+          "Group Description" = $otherproperties.description
+          "Group Mail" = $otherproperties.mail
+          "Group Mail Nickname" = $otherproperties.mailNickname
+          "Group Mail Enabled" = $otherproperties.mailEnabled
+          "Group ID" = $groupIDs
+        })
+      } else {
+        $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
+          "Group Name" = $otherproperties.displayName
+          "Group Mail" = $otherproperties.mail
+        })
+      }
+      
     }
     
+    if ( $GridView ) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
+
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs." -f "Red"
   }
-  
-  if ( $GridView ) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
 }
 
 # Export Modules ===================================================================================================================================================
