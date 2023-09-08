@@ -269,10 +269,9 @@ function Get-MboxPermission {
       Where-Object { $_.AccessRights -eq "FullAccess" -and !$_.IsInherited } |
       ForEach-Object {
           $UserMailbox = $_.User.ToString()
-          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox).PrimarySmtpAddress
+          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
           $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
 
-          #$existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $UserMailbox }
           $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
           if ($existingUserObject) {
               $existingUserObject.AccessRights += ", FullAccess"
@@ -289,10 +288,9 @@ function Get-MboxPermission {
       Where-Object { $_.Trustee.ToString() -ne "NT AUTHORITY\SELF" -And $_.Trustee.ToString() -notlike "S-1-5*" } |
       ForEach-Object {
           $UserMailbox = $_.Trustee.ToString()
-          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox).PrimarySmtpAddress
+          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
           $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
 
-          #$existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $UserMailbox }
           $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
           if ($existingUserObject) {
               $existingUserObject.AccessRights += ", SendAs"
@@ -308,10 +306,9 @@ function Get-MboxPermission {
   $MboxPermSendOnBehalfTo = $(Get-Mailbox $SourceMailbox).GrantSendOnBehalfTo |
       ForEach-Object {
           $UserMailbox = $_
-          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox).PrimarySmtpAddress
+          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
           $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
 
-          #$existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $UserMailbox }
           $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
           if ($existingUserObject) {
               $existingUserObject.AccessRights += ", SendOnBehalfTo"
