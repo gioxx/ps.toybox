@@ -15,6 +15,7 @@ function priv_CheckMGGraphModule {
     if ( (Get-Module -Name Microsoft.Graph -ListAvailable).count -gt 0 ) {
         try {
             Get-MgUser -ErrorAction Stop
+            $mggConnected = $true
         } catch {
             Write-Host "Please wait until I load Microsoft Graph, the operation can take a minute or more." -f "Yellow"
             Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
@@ -135,16 +136,10 @@ function priv_SaveFileWithProgressiveNumber($path) {
     return $path
 }
 
-function priv_TakeDecision($title, $message) {
-    $choices  = '&Yes', '&No'
-    $decision = $Host.UI.PromptForChoice("$($title)", "$($message)", $choices, 0)
-    return $decision
-}
-
 function priv_TakeDecisionOptions($message, $yes, $no, $yesHint, $noHint, $defaultOption=0) {
     $option_1 = New-Object System.Management.Automation.Host.ChoiceDescription "$($yes)", "$($yesHint)"
     $option_2 = New-Object System.Management.Automation.Host.ChoiceDescription "$($no)", "$($noHint)"
     $options = [System.Management.Automation.Host.ChoiceDescription[]]($option_1, $option_2)
-    $options_result = $Host.UI.PromptForChoice("", $message, $options, $defaultOption)
+    $options_result = $Host.UI.PromptForChoice("", "`n$message", $options, $defaultOption)
     return $options_result
 }
