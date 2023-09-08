@@ -136,21 +136,15 @@ function Set-OoO {
 
     if ([string]::IsNullOrEmpty($Start) -eq $False -And [string]::IsNullOrEmpty($End) -eq $False ) {
       $Status = "Scheduled"
-      #Write-Host "DEBUG: Scheduled" -f "Yellow"
     } else {
       $Status = "Enabled"
-      #Write-Host "DEBUG: Enabled" -f "Yellow"
     }
 
     Switch ($Status) {
         "Enabled" {
-          #Write-Host "DEBUG: Int- $InternalReply" -f "Yellow"
-          #Write-Host "DEBUG: Ext- $ExternalReply" -f "Yellow"
           Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Enabled -InternalMessage $InternalReply -ExternalMessage $ExternalReply
         }
         "Scheduled" {
-          #Write-Host "DEBUG: Int- $InternalReply" -f "Yellow"
-          #Write-Host "DEBUG: Ext- $ExternalReply" -f "Yellow"
           Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Scheduled -StartTime $StartDate -EndTime $EndDate -InternalMessage $InternalReply -ExternalMessage $ExternalReply
         }
     }

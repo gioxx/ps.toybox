@@ -248,7 +248,6 @@ function Get-UserGroups {
     $groupList=@()
 
     if ( $UserPrincipalName -notcontains "@" ) {
-      #Write-Host "DEBUG: PrimarySmtpAddress not specified, searching $($UserPrincipalName)'s PrimarySmtpAddress ..." -f "Yellow"
       $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
     }
 
