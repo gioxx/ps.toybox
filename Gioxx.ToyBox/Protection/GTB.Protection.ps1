@@ -355,12 +355,16 @@ function Get-QuarantineToRelease {
     
     if ( $ReleaseQuarantine -ne $null ) {
       if ( $ReleaseQuarantine.Count -eq 1 ) {
-        # $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Subject)?")
-        $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Subject)?" "&Yes" "&No" "Release message(s)." "Do not release message(s)."
+        $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Subject)?" "&Yes" "&No" "Release message." "Do not release message."
         if ($decision -eq 0) {
-          # Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Release-QuarantineMessage -ReleaseToAll
-          # Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity | Format-Table -AutoSize Subject,SenderAddress,Released,ReleasedUser
-          Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -Confirm:$false
+          
+          $reportFalsePositive = priv_TakeDecisionOptions "Do you want to report false positive to Microsoft?" "&Yes" "&No" "Report false positive message to Microsoft." "Do not report false positive message to Microsoft." 1
+          if ( $reportFalsePositive -eq 0 ) {
+            Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -ReportFalsePositive -Confirm:$false
+          } else { 
+            Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -Confirm:$false
+          }
+          
           $released = Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity
           
           $releasedResults = @()
@@ -385,13 +389,10 @@ function Get-QuarantineToRelease {
         ""; Write-Host "$($ReleaseQuarantine.Count) items selected, take a look at the preview below:" -f "Cyan"
         $ReleaseQuarantinePreview | Sort-Object Subject | Select-Object Subject,SenderAddress,Released | Out-Host
 
-        # $relDel  = '&Release', '&Delete'
-        # $release_or_delete = $Host.UI.PromptForChoice("Do you want to release or delete $($ReleaseQuarantine.Count) selected items?", "", $relDel, 0)
         $release_or_delete = priv_TakeDecisionOptions "Do you want to release or delete $($ReleaseQuarantine.Count) selected items?" "&Release" "&Delete" "Release messages" "Delete messages"
         
         if ( $release_or_delete -eq 1 ) {
           # DELETE QUARANTINED EMAILS SELECTED
-          # $decision = priv_TakeDecision("Do you really want to permanently delete", "$($ReleaseQuarantine.Count) selected items?")
           $decision = priv_TakeDecisionOptions "Do you really want to permanently delete $($ReleaseQuarantine.Count) selected items?" "&Yes" "&No" "Delete message(s)." "Do not delete message(s)."
           $ReleaseQuarantine | ForEach {
             if ($decision -eq 0) {
@@ -412,11 +413,17 @@ function Get-QuarantineToRelease {
           $ReleaseQuarantineDeleted | Sort-Object Subject | Select-Object Subject,SenderAddress | Out-Host
         } else {
           # RELEASE QUARANTINED EMAILS SELECTED
-          # $decision = priv_TakeDecision("Do you really want to release", "$($ReleaseQuarantine.Count) selected items?")
-          $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Count) selected items?" "&Yes" "&No" "Release message(s)." "Do not release message(s)."
+          $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Count) selected items?" "&Yes" "&No" "Release messages." "Do not release messages."
+          $reportFalsePositive = priv_TakeDecisionOptions "Do you want to report false positive to Microsoft?" "&Yes" "&No" "Report false positive message to Microsoft." "Do not report false positive message to Microsoft." 1
+
           $ReleaseQuarantine | ForEach {
             if ( $decision -eq 0 ) {
-              Release-QuarantineMessage -Identity $_.Identity -ReleaseToAll -Confirm:$false
+              if ( $reportFalsePositive -eq 0 ) {
+                Release-QuarantineMessage -Identity $_.Identity -ReleaseToAll -ReportFalsePositive -Confirm:$false
+              } else { 
+                Release-QuarantineMessage -Identity $_.Identity -ReleaseToAll -Confirm:$false
+              }
+              
               $QuarantinedMessageReleased = Get-QuarantineMessage -Identity $_.Identity
               
               $ProcessedCount++
