@@ -13,15 +13,22 @@ function Export-CalendarPermission {
   begin {
     $mboxCounter = 0
     $Result = @()
-    Set-Variable ProgressPreference Continue
+    $eolConnectedCheck = priv_CheckEOLConnection
 
-    if ([string]::IsNullOrEmpty($SourceMailbox)) {
-      Write-Host "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient." -f "Yellow"
-      $All = $True
-    }
+    if ( $eolConnectedCheck -eq $true ) {
+      Set-Variable ProgressPreference Continue
 
-    if ($All) {
-      $SourceMailbox = Get-Mailbox -ResultSize Unlimited
+      if ([string]::IsNullOrEmpty($SourceMailbox)) {
+        Write-Host "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient." -f "Yellow"
+        $All = $True
+      }
+
+      if ($All) {
+        $SourceMailbox = Get-Mailbox -ResultSize Unlimited
+      }
+    } else {
+      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Return
     }
   }
 
@@ -64,93 +71,102 @@ function Set-OoO {
     [Parameter(Mandatory=$False, HelpMessage="Disable OoO on specified mailbox")]
     [switch] $Disable
   )
+
+  $eolConnectedCheck = priv_CheckEOLConnection
   
-  [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-  [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
-  [void] [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.VisualBasic")
-  $objForm = New-Object Windows.Forms.Form
-  $objForm.Size = New-Object Drawing.Size @(200,190)
-  $objForm.StartPosition = "CenterScreen"
-  $objForm.KeyPreview = $True
+  if ( $eolConnectedCheck -eq $true ) {
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.VisualBasic")
+    $objForm = New-Object Windows.Forms.Form
+    $objForm.Size = New-Object Drawing.Size @(200,190)
+    $objForm.StartPosition = "CenterScreen"
+    $objForm.KeyPreview = $True
 
-  $objForm.Add_KeyDown({
-    if ($_.KeyCode -eq "Enter") {
-      $dtmDate = $objCalendar.SelectionStart
-      $objForm.Close()
+    $objForm.Add_KeyDown({
+      if ($_.KeyCode -eq "Enter") {
+        $dtmDate = $objCalendar.SelectionStart
+        $objForm.Close()
+      }
+    })
+
+    $objForm.Add_KeyDown({
+      if ($_.KeyCode -eq "Escape") {
+        $objForm.Close()
+      }
+    })
+
+    $objCalendar = New-Object System.Windows.Forms.MonthCalendar
+    $objCalendar.ShowTodayCircle = $True
+    $objCalendar.MaxSelectionCount = 1
+    $objForm.Controls.Add($objCalendar)
+    $objForm.Topmost = $True
+
+    New-Variable dtmDate -Option AllScope
+
+    if ( $Disable ) {
+      Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Disabled
+      Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox
+      break
     }
-  })
 
-  $objForm.Add_KeyDown({
-    if ($_.KeyCode -eq "Escape") {
-      $objForm.Close()
-    }
-  })
-
-  $objCalendar = New-Object System.Windows.Forms.MonthCalendar
-  $objCalendar.ShowTodayCircle = $True
-  $objCalendar.MaxSelectionCount = 1
-  $objForm.Controls.Add($objCalendar)
-  $objForm.Topmost = $True
-
-  New-Variable dtmDate -Option AllScope
-
-  if ( $Disable ) {
-    Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Disabled
-    Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox
-    break
-  }
-
-  $previousMessage = Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox | Select -ExpandProperty ExternalMessage
-  if ( [string]::IsNullOrEmpty($previousMessage) ) {
-    $proposedText = "I'm out of office and will have limited access to my mailbox.<br />
-      I will reply to your email as soon as possible.
-      <br /><br />
-      Have a nice day."
-  } else { $proposedText = $previousMessage }
-  
-  $InternalReply = priv_GUI_TextBox "Out of Office message for internal addresses (same server)" $proposedText
-  $ExternalReply = priv_GUI_TextBox "Out of Office message for external addresses (different server)" $InternalReply
-
-  try {
-    $AbsenceIntervalReply = priv_TakeDecisionOptions "Do you want to specify an absence interval?" "&Yes" "&No" "Specify a period of absence" "Continue without specifying a period of absence"
+    $previousMessage = Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox | Select -ExpandProperty ExternalMessage
+    if ( [string]::IsNullOrEmpty($previousMessage) ) {
+      $proposedText = "I'm out of office and will have limited access to my mailbox.<br />
+        I will reply to your email as soon as possible.
+        <br /><br />
+        Have a nice day."
+    } else { $proposedText = $previousMessage }
     
-    if ( $AbsenceIntervalReply -eq 0 ) {
-      Write-Host "Now select the first day off in the popup and press enter" -f "Yellow"
-      $objForm.Text = "Select OoO start date (first day of absence) or press ESC to ignore"
-      $objForm.Add_Shown({$objForm.Activate()})
-      [void] $objForm.ShowDialog()
-      $StartDate = $dtmDate
-      if ($dtmDate) {
-        Write-Host "Start date selected: $dtmDate"
+    $InternalReply = priv_GUI_TextBox "Out of Office message for internal addresses (same server)" $proposedText
+    $ExternalReply = priv_GUI_TextBox "Out of Office message for external addresses (different server)" $InternalReply
+
+    try {
+      $AbsenceIntervalReply = priv_TakeDecisionOptions "Do you want to specify an absence interval?" "&Yes" "&No" "Specify a period of absence" "Continue without specifying a period of absence"
+      
+      if ( $AbsenceIntervalReply -eq 0 ) {
+        Write-Host "Now select the first day off in the popup and press enter" -f "Yellow"
+        $objForm.Text = "Select OoO start date (first day of absence) or press ESC to ignore"
+        $objForm.Add_Shown({$objForm.Activate()})
+        [void] $objForm.ShowDialog()
+        $StartDate = $dtmDate
+        if ($dtmDate) {
+          Write-Host "Start date selected: $dtmDate"
+        }
+
+        Write-Host "Now select in the popup the last day of absence and press enter" -f "Yellow"
+        $objForm.Text = "Select OoO end date (last day of absence) or press ESC to ignore"
+        $objForm.Add_Shown({$objForm.Activate()})
+        [void] $objForm.ShowDialog()
+        $EndDate = $dtmDate
+        if ($dtmDate) {
+          Write-Host "End date selected: $dtmDate"
+        }
       }
 
-      Write-Host "Now select in the popup the last day of absence and press enter" -f "Yellow"
-      $objForm.Text = "Select OoO end date (last day of absence) or press ESC to ignore"
-      $objForm.Add_Shown({$objForm.Activate()})
-      [void] $objForm.ShowDialog()
-      $EndDate = $dtmDate
-      if ($dtmDate) {
-        Write-Host "End date selected: $dtmDate"
+      if ([string]::IsNullOrEmpty($Start) -eq $False -And [string]::IsNullOrEmpty($End) -eq $False ) {
+        $Status = "Scheduled"
+      } else {
+        $Status = "Enabled"
       }
+
+      Switch ($Status) {
+          "Enabled" {
+            Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Enabled -InternalMessage $InternalReply -ExternalMessage $ExternalReply
+          }
+          "Scheduled" {
+            Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Scheduled -StartTime $StartDate -EndTime $EndDate -InternalMessage $InternalReply -ExternalMessage $ExternalReply
+          }
+      }
+      
+      Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox
+
+    } catch {
+      Write-Error $_.Exception.Message
     }
 
-    if ([string]::IsNullOrEmpty($Start) -eq $False -And [string]::IsNullOrEmpty($End) -eq $False ) {
-      $Status = "Scheduled"
-    } else {
-      $Status = "Enabled"
-    }
-
-    Switch ($Status) {
-        "Enabled" {
-          Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Enabled -InternalMessage $InternalReply -ExternalMessage $ExternalReply
-        }
-        "Scheduled" {
-          Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Scheduled -StartTime $StartDate -EndTime $EndDate -InternalMessage $InternalReply -ExternalMessage $ExternalReply
-        }
-    }
-    Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox
-  } catch {
-    Write-Error $_.Exception.Message
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
   }
 
 }
