@@ -12,7 +12,7 @@ function Export-CalendarPermission {
 
   begin {
     $mboxCounter = 0
-    $Result = @()
+    $arr_CalPerm = @()
     $eolConnectedCheck = priv_CheckEOLConnection
 
     if ( $eolConnectedCheck -eq $true ) {
@@ -24,7 +24,7 @@ function Export-CalendarPermission {
       }
 
       if ($All) {
-        $SourceMailbox = Get-Mailbox -ResultSize Unlimited
+        $SourceMailbox = Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue
       }
     } else {
       Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
@@ -35,7 +35,7 @@ function Export-CalendarPermission {
   process {
     $SourceMailbox | ForEach {
       $CurrentUser = $_
-      $GetCM = Get-Mailbox $CurrentUser -ErrorAction SilentlyContinue
+      $GetCM = Get-EXOMailbox $CurrentUser -ErrorAction SilentlyContinue
 
       $mboxCounter++
       $PercentComplete = (($mboxCounter / $SourceMailbox.Count) * 100)
@@ -46,7 +46,7 @@ function Export-CalendarPermission {
       $folderPerms = Get-MailboxFolderPermission "$($GetCM.PrimarySmtpAddress):$($calendarFolder.FolderId)" -ErrorAction SilentlyContinue | 
           Where { $_.AccessRights -notlike "AvailabilityOnly" -and $_.AccessRights -notlike "None" }
       $folderPerms | ForEach {
-          $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+          $arr_CalPerm += New-Object -TypeName PSObject -Property $([ordered]@{
               PrimarySmtpAddress = $GetCM.PrimarySmtpAddress
               User = $_.User
               Permissions = $_.AccessRights
@@ -57,9 +57,9 @@ function Export-CalendarPermission {
     if (-not([string]::IsNullOrEmpty($folderCSV)) -Or $All) { 
       $folder = priv_CheckFolder($folderCSV)
       $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-CalendarPermissions-Report.csv")
-      $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+      $arr_CalPerm | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
     } else {
-      $Result
+      $arr_CalPerm | Out-Host
     }
   }
 }

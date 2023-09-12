@@ -11,7 +11,7 @@ function Get-RoomsDetails {
   )
 
   $mboxCounter = 0
-  $Result = @()
+  $arr_RoomDetails = @()
   $eolConnectedCheck = priv_CheckEOLConnection
   Set-Variable ProgressPreference Continue
 
@@ -28,7 +28,7 @@ function Get-RoomsDetails {
       Write-Progress -Activity "Processing $($CurrentUser.DisplayName)" -Status "$mboxCounter out of $($Locations.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
       Get-DistributionGroupMember $CurrentUser.PrimarySmtpAddress | ForEach {
-        $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+        $arr_RoomDetails += New-Object -TypeName PSObject -Property $([ordered]@{
             "Location" = $CurrentUser.Name
             "Location PrimarySmtpAddress" = $CurrentUser.PrimarySmtpAddress
             "Room Display Name" = $_.DisplayName
@@ -39,12 +39,12 @@ function Get-RoomsDetails {
     }
 
     if ( $GridView ) {
-      $Result | Out-GridView -Title "M365 Rooms Details"
+      $arr_RoomDetails | Out-GridView -Title "M365 Rooms Details"
     } elseif ( $CSV ) {
       $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-Rooms.csv")
-      $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+      $arr_RoomDetails | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
     } else {
-      $Result
+      $arr_RoomDetails | Out-Host
     }
 
   } else {

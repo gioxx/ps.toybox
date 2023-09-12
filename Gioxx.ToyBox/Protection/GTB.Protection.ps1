@@ -17,7 +17,7 @@ function Export-MFAStatus {
   $mggConnectedCheck = priv_CheckMGGraphModule
   
   if ( $mggConnectedCheck -eq $true ) {
-    $Result = @()
+    $arr_MFAStatus = @()
     $ProcessedCount = 0
 
     $select = @(
@@ -114,7 +114,7 @@ function Export-MFAStatus {
       }
 
       if ( $All ) {
-        $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
+        $arr_MFAStatus += New-Object -TypeName PSObject -Property $([ordered]@{ 
           Name = $User.DisplayName
           "Email Address" = $User.mail
           UserPrincipalName = $User.UserPrincipalName
@@ -132,7 +132,7 @@ function Export-MFAStatus {
         })
       } else {
         if ( $MFAMethods.status -eq "enabled" ) {
-          $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
+          $arr_MFAStatus += New-Object -TypeName PSObject -Property $([ordered]@{ 
             Name = $User.DisplayName
             "Email Address" = $User.mail
             UserPrincipalName = $User.UserPrincipalName
@@ -154,7 +154,7 @@ function Export-MFAStatus {
     }
 
     $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MFA-Status-Report.csv")
-    $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+    $arr_MFAStatus | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 
   } else {
     Write-Host "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs." -f "Red"
@@ -177,7 +177,7 @@ function Export-MFAStatusDefaultMethod {
     Write-Error "You must connect to the MSolService to continue" -ErrorAction Stop
   }
 
-  $Result = @()
+  $arr_MFAStatusDefaultMethod = @()
   $ProcessedCount = 0
   $MsolUserList = Get-MsolUser -All -ErrorAction Stop | 
       Where { $_.UserType -ne 'Guest' -And $_.DisplayName -notmatch 'On-Premises Directory Synchronization' }
@@ -210,7 +210,7 @@ function Export-MFAStatusDefaultMethod {
     }
 
     if ( $All ) {
-      $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
+      $arr_MFAStatusDefaultMethod += New-Object -TypeName PSObject -Property $([ordered]@{ 
         UserPrincipalName = $User.UserPrincipalName
         DisplayName = $User.DisplayName
         PerUserMFAState = $PerUserMFAState
@@ -220,7 +220,7 @@ function Export-MFAStatusDefaultMethod {
       $MethodType = $null
     } else {
       if ( !($PerUserMFAState -eq 'Disabled') ) {
-        $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
+        $arr_MFAStatusDefaultMethod += New-Object -TypeName PSObject -Property $([ordered]@{ 
           UserPrincipalName = $User.UserPrincipalName
           DisplayName = $User.DisplayName
           DefaultMethodType = $DefaultMethodType
@@ -233,7 +233,7 @@ function Export-MFAStatusDefaultMethod {
   }
 
   $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MFA-DefaultAuthMethod-Report.csv")
-  $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+  $arr_MFAStatusDefaultMethod | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 
 }
 
@@ -337,7 +337,7 @@ function Get-QuarantineToRelease {
   Set-Variable ProgressPreference Continue
 
   if ( $Interval -gt 30 ) { $Interval = 30 } else { $Interval = $($Interval) }
-  $Result = @()
+  $arr_QuarantineToRelease = @()
   $ReleaseQuarantinePreview = @()
   $ReleaseQuarantineReleased = @()
   $ReleaseQuarantineDeleted = @()
@@ -362,7 +362,7 @@ function Get-QuarantineToRelease {
 
     $QuarantinedMessagesAll | ForEach {
       $Message = $_
-      $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+      $arr_QuarantineToRelease += New-Object -TypeName PSObject -Property $([ordered]@{
         SenderAddress = $Message.SenderAddress
         RecipientAddress = $Message.RecipientAddress
         Subject = $Message.Subject
@@ -375,7 +375,7 @@ function Get-QuarantineToRelease {
 
     if ( $GridView ) {
       # Credits: https://stackoverflow.com/a/51033908
-      $ReleaseQuarantine = $Result | Sort-Object -Descending ReceivedTime | Out-GridView -Title "$($startDate.Date) to $($endDate) • $($Interval) days • $($QuarantinedMessagesAll.Count) items" -PassThru
+      $ReleaseQuarantine = $arr_QuarantineToRelease | Sort-Object -Descending ReceivedTime | Out-GridView -Title "$($startDate.Date) to $($endDate) • $($Interval) days • $($QuarantinedMessagesAll.Count) items" -PassThru
 
       $ProcessedCount = 0
       
@@ -465,7 +465,7 @@ function Get-QuarantineToRelease {
         }
       }
     } else {
-      $Result | Sort-Object Subject | Select-Object SenderAddress,RecipientAddress,Subject,QuarantineTypes,Released
+      $arr_QuarantineToRelease | Sort-Object Subject | Select-Object SenderAddress,RecipientAddress,Subject,QuarantineTypes,Released
     }
 
   } else {

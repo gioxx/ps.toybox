@@ -16,7 +16,7 @@ function Export-DG {
 
   Set-Variable ProgressPreference Continue
   $DGsCounter = 0
-  $Result = @()
+  $arr_ExportedDG = @()
   $eolConnectedCheck = priv_CheckEOLConnection
   
   if ( $eolConnectedCheck -eq $true ) {
@@ -40,7 +40,7 @@ function Export-DG {
 
         Get-DistributionGroupMember $CurrentDG | ForEach {
           if ($All) {
-            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            $arr_ExportedDG += New-Object -TypeName PSObject -Property $([ordered]@{
               "Group Name" = $GetDG.DisplayName
               "Group Primary Smtp Address" = $GetDG.PrimarySmtpAddress
               "Member Display Name" = $_.DisplayName
@@ -51,7 +51,7 @@ function Export-DG {
               "Member City" = $_.City
             })
           } else {
-            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            $arr_ExportedDG += New-Object -TypeName PSObject -Property $([ordered]@{
               "Member Display Name" = $_.DisplayName
               "Member FirstName" = $_.FirstName
               "Member LastName" = $_.LastName
@@ -67,12 +67,12 @@ function Export-DG {
     }
 
     if ( $GridView ) {
-      $Result | Out-GridView -Title "M365 Distribution Groups"
+      $arr_ExportedDG | Out-GridView -Title "M365 Distribution Groups"
     } elseif ( $CSV ) {
       $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-DistributionGroups-Report.csv")
-      $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+      $arr_ExportedDG | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
     } else {
-      $Result
+      $arr_ExportedDG | Out-Host
     }
 
   } else {
@@ -96,7 +96,7 @@ function Export-DDG {
 
   Set-Variable ProgressPreference Continue
   $DDGsCounter = 0
-  $Result = @()
+  $arr_ExportedDDG = @()
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
@@ -120,7 +120,7 @@ function Export-DDG {
 
         Get-DynamicDistributionGroupMember $CurrentDDG | ForEach {
           if ($All) {
-            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            $arr_ExportedDDG += New-Object -TypeName PSObject -Property $([ordered]@{
               "Group Name" = $GetDDG.DisplayName
               "Group Primary Smtp Address" = $GetDDG.PrimarySmtpAddress
               "Member Display Name" = $_.DisplayName
@@ -131,7 +131,7 @@ function Export-DDG {
               "Member City" = $_.City
             })
           } else {
-            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            $arr_ExportedDDG += New-Object -TypeName PSObject -Property $([ordered]@{
               "Member Display Name" = $_.DisplayName
               "Member FirstName" = $_.FirstName
               "Member LastName" = $_.LastName
@@ -147,12 +147,12 @@ function Export-DDG {
     }
 
     if ( $GridView ) {
-      $Result | Out-GridView -Title "M365 Dynamic Distribution Groups"
+      $arr_ExportedDDG | Out-GridView -Title "M365 Dynamic Distribution Groups"
     } elseif ( $CSV ) {
       $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-DynamicDistributionGroups-Report.csv")
-      $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+      $arr_ExportedDDG | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
     } else {
-      $Result
+      $arr_ExportedDDG | Out-Host
     }
 
   } else {
@@ -176,7 +176,7 @@ function Export-M365Group {
 
   Set-Variable ProgressPreference Continue
   $M365GsCounter = 0
-  $Result = @()
+  $arr_ExportedM365Groups = @()
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
@@ -200,7 +200,7 @@ function Export-M365Group {
 
         $GetM365G | Get-UnifiedGroupLinks -LinkType Member | ForEach {
           if ($All) {
-            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            $arr_ExportedM365Groups += New-Object -TypeName PSObject -Property $([ordered]@{
               "Group Name" = $GetM365G.DisplayName
               "Group Primary Smtp Address" = $GetM365G.PrimarySmtpAddress
               "Member Display Name" = $_.DisplayName
@@ -211,7 +211,7 @@ function Export-M365Group {
               "Member City" = $_.City
             })
           } else {
-            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            $arr_ExportedM365Groups += New-Object -TypeName PSObject -Property $([ordered]@{
               "Member Display Name" = $_.DisplayName
               "Member FirstName" = $_.FirstName
               "Member LastName" = $_.LastName
@@ -227,12 +227,12 @@ function Export-M365Group {
     }
 
     if ( $GridView ) {
-      $Result | Out-GridView -Title "M365 Unified Groups"
+      $arr_ExportedM365Groups | Out-GridView -Title "M365 Unified Groups"
     } elseif ( $CSV ) {
       $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-UnifiedGroups-Report.csv")
-      $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+      $arr_ExportedM365Groups | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
     } else {
-      $Result
+      $arr_ExportedM365Groups | Out-Host
     }
 
   } else {
