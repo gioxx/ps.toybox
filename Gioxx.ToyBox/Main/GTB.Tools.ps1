@@ -1,5 +1,50 @@
 # Tools for Gioxx's ToyBox
 
+function priv_CheckEOLConnection {
+    $eolConnected = $false
+    $userConnected = priv_MailSearcher
+
+    if ( (Get-Module -Name ExchangeOnlineManagement -ListAvailable).count -gt 0 ) {
+        try {
+            Get-EXOMailbox -ResultSize 1 -ErrorAction Stop
+            $eolConnected = $true
+        } catch {
+            if ( $userConnected -ne "notfound" ) {
+                Write-Host "Please wait until I load Microsoft Exchange Online Management.`nConnecting using $($userConnected) ..." -f "Yellow"
+                Connect-EOL -UserPrincipalName $userConnected 
+            } else {
+                Write-Host "Please wait until I load Microsoft Exchange Online Management." -f "Yellow"
+                Connect-EOL 
+            }
+            $eolConnected = $true
+        }
+    } else {
+        Write-Host "Microsoft Exchange Online Management module is not available."  -f "Yellow" 
+        $Confirm = Read-Host "Are you sure you want to install module? [Y] Yes [N] No "
+        if ( $Confirm -match "[yY]" ) {
+            try {
+                Write-host "Installing Microsoft Exchange Online Management PowerShell module ..."
+                Install-Module ExchangeOnlineManagement -Scope CurrentUser -AllowClobber -Force
+                if ( $userConnected -ne "notfound" ) { 
+                    Write-Host "Please wait until I load Microsoft Exchange Online Management.`nConnecting using $($userConnected) ..." -f "Yellow"
+                    Connect-EOL -UserPrincipalName $userConnected
+                } else {
+                    Connect-EOL
+                }
+                $eolConnected = $true
+            } catch {
+                ""; Write-Host "Can't install Exchange Online Management modules. `nPlease check logs." -f "Red"
+                exit
+            }
+        } else {
+            ""; Write-Host "Microsoft Exchange Online Management module is required to run this script. `nPlease install module using Install-Module ExchangeOnlineManagement cmdlet." -f "Red"
+            exit
+        }
+    }
+
+    return $eolConnected
+}
+
 function priv_CheckFolder($path) {
     if ([string]::IsNullOrEmpty($path)) {
         $path = ".\"
@@ -35,7 +80,7 @@ function priv_CheckMGGraphModule {
                 Connect-MgGraph
                 $mggConnected = $true
             } catch {
-                ""; Write-Host "Can't install and import Graph Modules. `nPlease check logs." -f "Red"
+                ""; Write-Host "Can't install and import Graph modules. `nPlease check logs." -f "Red"
                 exit
             }
         } else {
@@ -111,6 +156,17 @@ function priv_GUI_TextBox ($headerMessage, $defaultText) {
             Write-Host "Operation canceled (Aborted by user)." -f "Yellow"
             break
         }
+    }
+}
+
+function priv_MailSearcher {
+    # Credits: https://powershellmagazine.com/2012/11/14/pstip-how-to-get-the-email-address-of-the-currently-logged-on-user/
+    $searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
+    if ( $searcher -ne $null ) {
+        $mailAddress = $searcher.FindOne().Properties.mail
+        return $mailAddress
+    } else {
+        return "notfound"
     }
 }
 
