@@ -10,6 +10,7 @@
     ".\Mailboxes\GTB.Mboxes.ps1",
     '.\Main\GTB.Connections.ps1',
     '.\Main\GTB.Tools.ps1',
+    '.\Main\GTB.Xtras.ps1',
     ".\Protection\GTB.Protection.ps1",
     ".\Rooms\GTB.Room.ps1",
     ".\Statistics\GTB.Stats.ps1"
@@ -73,7 +74,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview6'
+      Prerelease = 'Preview7'
       RequireLicenseAcceptance = $False
 
     }
