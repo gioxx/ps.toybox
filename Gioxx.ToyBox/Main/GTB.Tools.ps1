@@ -136,27 +136,33 @@ function priv_GUI_TextBox ($headerMessage, $defaultText) {
     $form.Controls.Add($textBox)
 
     $form.Add_Shown({$textBox.Select()})
-    $result = $form.ShowDialog()
+    $ShowDialogResult = $form.ShowDialog()
 
     if ($textBox.Text -eq '') {
         # Empty TextBox
         Write-Host "Message can't be empty, operation canceled." -f "Yellow"
         break
     } else {
-        if ( $result -eq [System.Windows.Forms.DialogResult]::OK ) {
+        if ( $ShowDialogResult -eq [System.Windows.Forms.DialogResult]::OK ) {
             $x = $textBox.Lines | Where{$_} | ForEach{ $_.Trim() }
-            $array = @()
-            $array = $x -split "`r`n"
-            $AbsenceMessageHTMLOutput = $array -join "<br>"
-            #Return $array | Where-Object {$_ -ne ''}
+            $ShowDialogResult_array = @()
+            $ShowDialogResult_array = $x -split "`r`n"
+            $AbsenceMessageHTMLOutput = $ShowDialogResult_array -join "<br>"
+            #Return $ShowDialogResult_array | Where-Object {$_ -ne ''}
             return $AbsenceMessageHTMLOutput.Trim()
         }
 
-        if ( $result -eq [System.Windows.Forms.DialogResult]::Cancel ) {
+        if ( $ShowDialogResult -eq [System.Windows.Forms.DialogResult]::Cancel ) {
             Write-Host "Operation canceled (Aborted by user)." -f "Yellow"
             break
         }
     }
+}
+
+function priv_HideWarning {
+    $warningPrefBackup = $WarningPreference
+    $WarningPreference = "SilentlyContinue"
+    return $warningPrefBackup
 }
 
 function priv_MailSearcher {
