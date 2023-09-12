@@ -12,37 +12,43 @@ function Get-RoomsDetails {
 
   $mboxCounter = 0
   $Result = @()
+  $eolConnectedCheck = priv_CheckEOLConnection
   Set-Variable ProgressPreference Continue
 
   if (-not([string]::IsNullOrEmpty($folderCSV))) { $CSV = $True }
   if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
 
-  $Locations = Get-DistributionGroup -RecipientTypeDetails RoomList
-  $Locations | ForEach {
-    $CurrentUser = $_
+  if ( $eolConnectedCheck -eq $true ) {
+    $Locations = Get-DistributionGroup -RecipientTypeDetails RoomList
+    $Locations | ForEach {
+      $CurrentUser = $_
 
-    $mboxCounter++
-    $PercentComplete = (($mboxCounter / $Locations.Count) * 100)
-    Write-Progress -Activity "Processing $($CurrentUser.DisplayName)" -Status "$mboxCounter out of $($Locations.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+      $mboxCounter++
+      $PercentComplete = (($mboxCounter / $Locations.Count) * 100)
+      Write-Progress -Activity "Processing $($CurrentUser.DisplayName)" -Status "$mboxCounter out of $($Locations.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
-    Get-DistributionGroupMember $CurrentUser.PrimarySmtpAddress | ForEach {
-      $Result += New-Object -TypeName PSObject -Property $([ordered]@{
-          "Location" = $CurrentUser.Name
-          "Location PrimarySmtpAddress" = $CurrentUser.PrimarySmtpAddress
-          "Room Display Name" = $_.DisplayName
-          "Room PrimarySmtpAddress" = $_.PrimarySmtpAddress
-          "Room Capacity" = ($(Get-Mailbox $_.PrimarySmtpAddress).ResourceCapacity)
-      })
+      Get-DistributionGroupMember $CurrentUser.PrimarySmtpAddress | ForEach {
+        $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            "Location" = $CurrentUser.Name
+            "Location PrimarySmtpAddress" = $CurrentUser.PrimarySmtpAddress
+            "Room Display Name" = $_.DisplayName
+            "Room PrimarySmtpAddress" = $_.PrimarySmtpAddress
+            "Room Capacity" = ($(Get-Mailbox $_.PrimarySmtpAddress).ResourceCapacity)
+        })
+      }
     }
-  }
 
-  if ( $GridView ) {
-    $Result | Out-GridView -Title "M365 Rooms Details"
-  } elseif ( $CSV ) {
-    $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-Rooms.csv")
-    $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+    if ( $GridView ) {
+      $Result | Out-GridView -Title "M365 Rooms Details"
+    } elseif ( $CSV ) {
+      $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-Rooms.csv")
+      $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+    } else {
+      $Result
+    }
+
   } else {
-    $Result
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
   }
 }
 
