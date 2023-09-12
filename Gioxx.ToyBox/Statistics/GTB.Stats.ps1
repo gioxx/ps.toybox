@@ -15,14 +15,14 @@ function Export-MboxStatistics {
 
   if ( $eolConnectedCheck -eq $true ) {
     $folder = priv_CheckFolder($folderCSV)
-    $Result = @()
+    $arr_MbxStats = @()
     $ProcessedCount = 0
 
     if ( [string]::IsNullOrEmpty($user) ) { 
-      $Mailboxes = Get-Mailbox -ResultSize Unlimited
+      $Mailboxes = Get-Recipient -ResultSize Unlimited -WarningAction SilentlyContinue
       $WriteToCSV = $True
     } else { 
-      $Mailboxes = Get-Mailbox $user
+      $Mailboxes = Get-Recipient $user
       $WriteToCSV = $False
     }
 
@@ -47,30 +47,30 @@ function Export-MboxStatistics {
 
       $MailboxSize = [math]::Round((((Get-MailboxStatistics $Mbox.UserPrincipalName).TotalItemSize.Value.ToString()).Split("(")[1].Split(" ")[0].Replace(",","")/1GB),2)
 
-      $Result += New-Object -TypeName PSObject -Property $([ordered]@{ 
-      UserName = $Mbox.DisplayName
-      ServerName = $Mbox.ServerName
-      Database = $Mbox.Database
-      RecipientTypeDetails = $Mbox.RecipientTypeDetails
-      PrimarySmtpAddress = $Mbox.PrimarySmtpAddress
-      "Mailbox Size (GB)" = $MailboxSize
-      "Issue Warning Quota (GB)" = if ( $Round ) { [Math]::Ceiling($Mbox.IssueWarningQuota -Replace " GB.*") } else { $Mbox.IssueWarningQuota -Replace " GB.*" }
-      "Prohibit Send Quota (GB)" = if ( $Round ) { [Math]::Ceiling($Mbox.ProhibitSendQuota -Replace " GB.*") } else { $Mbox.ProhibitSendQuota -Replace " GB.*" }
-      "Archive Database" = if ( $Mbox.ArchiveDatabase -ne $null ) { $Mbox.ArchiveDatabase } else { $null }
-      "Archive Name" = if ( $Mbox.ArchiveDatabase -ne $null ) { $Mbox.ArchiveName } else { $null }
-      "Archive State" = if ( $Mbox.ArchiveDatabase -ne $null ) { $Mbox.ArchiveState } else { $null }
-      "Archive MailboxSize (GB)" = if ( $Mbox.ArchiveDatabase -ne $null ) { $ArchiveSize } else { $null }
-      "Archive Warning Quota (GB)" = if ( $Mbox.ArchiveDatabase -ne $null ) { if ( $Round ) { [Math]::Ceiling($Mbox.ArchiveWarningQuota -Replace " GB.*") } else { $Mbox.ArchiveWarningQuota -Replace " GB.*" } } else { $null }
-      "Archive Quota (GB)" = if ( $Mbox.ArchiveDatabase -ne $null ) { if ( $Round ) { [Math]::Ceiling($Mbox.ArchiveQuota -Replace " GB.*") } else { $Mbox.ArchiveQuota -Replace " GB.*" } } else { $null }
-      AutoExpandingArchiveEnabled = $Mbox.AutoExpandingArchiveEnabled
-      })
-    }
+      $arr_MbxStats += New-Object -TypeName PSObject -Property $([ordered]@{ 
+        UserName = $Mbox.DisplayName
+        ServerName = $Mbox.ServerName
+        Database = $Mbox.Database
+        RecipientTypeDetails = $Mbox.RecipientTypeDetails
+        PrimarySmtpAddress = $Mbox.PrimarySmtpAddress
+        "Mailbox Size (GB)" = $MailboxSize
+        "Issue Warning Quota (GB)" = if ( $Round ) { [Math]::Ceiling($Mbox.IssueWarningQuota -Replace " GB.*") } else { $Mbox.IssueWarningQuota -Replace " GB.*" }
+        "Prohibit Send Quota (GB)" = if ( $Round ) { [Math]::Ceiling($Mbox.ProhibitSendQuota -Replace " GB.*") } else { $Mbox.ProhibitSendQuota -Replace " GB.*" }
+        "Archive Database" = if ( $Mbox.ArchiveDatabase -ne $null ) { $Mbox.ArchiveDatabase } else { $null }
+        "Archive Name" = if ( $Mbox.ArchiveDatabase -ne $null ) { $Mbox.ArchiveName } else { $null }
+        "Archive State" = if ( $Mbox.ArchiveDatabase -ne $null ) { $Mbox.ArchiveState } else { $null }
+        "Archive MailboxSize (GB)" = if ( $Mbox.ArchiveDatabase -ne $null ) { $ArchiveSize } else { $null }
+        "Archive Warning Quota (GB)" = if ( $Mbox.ArchiveDatabase -ne $null ) { if ( $Round ) { [Math]::Ceiling($Mbox.ArchiveWarningQuota -Replace " GB.*") } else { $Mbox.ArchiveWarningQuota -Replace " GB.*" } } else { $null }
+        "Archive Quota (GB)" = if ( $Mbox.ArchiveDatabase -ne $null ) { if ( $Round ) { [Math]::Ceiling($Mbox.ArchiveQuota -Replace " GB.*") } else { $Mbox.ArchiveQuota -Replace " GB.*" } } else { $null }
+        AutoExpandingArchiveEnabled = $Mbox.AutoExpandingArchiveEnabled
+        })
+      }
 
     if ( $WriteToCSV ) {
       $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MailboxStatistics.csv")
-      $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+      $arr_MbxStats | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
     } else {
-      $Result
+      $arr_MbxStats | Out-Host
     }
 
   } else {
@@ -87,9 +87,9 @@ function Export-MsolAccountSku {
   Set-Variable ProgressPreference Continue
   $folder = priv_CheckFolder($folderCSV)
   $mggConnectedCheck = priv_CheckMGGraphModule
-  
+
   if ( $mggConnectedCheck -eq $true ) {
-    $Result = @()
+    $arr_MsolAccountSku = @()
     $ProcessedCount = 0
     $licenseFile = Invoke-RestMethod -Method Get -Uri $GTBVars.LicensesJSON
     $Users = Get-MgUser -Filter 'assignedLicenses/$count ne 0' -ConsistencyLevel eventual -CountVariable totalUsers -All
@@ -104,7 +104,7 @@ function Export-MsolAccountSku {
         ForEach ( $License in $($GraphLicense.SkuPartNumber) ) {
           ForEach ( $LicenseStringId in $licenseFile ) {
             if ( $LicenseStringId.String_Id -eq $License ) {
-                $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+                $arr_MsolAccountSku += New-Object -TypeName PSObject -Property $([ordered]@{
                 DisplayName = $User.DisplayName
                 UserPrincipalName = $User.UserPrincipalName
                 PrimarySmtpAddress = $User.Mail
@@ -118,7 +118,7 @@ function Export-MsolAccountSku {
     }
     
     $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-User-License-Report.csv")
-    $Result | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+    $arr_MsolAccountSku | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 
   } else {
     Write-Host "`nCan't connect or use Microsoft Graph modules. `nPlease check logs." -f "Red"
