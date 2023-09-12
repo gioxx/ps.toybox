@@ -8,15 +8,23 @@ function Add-MboxAlias {
     [string] $MailboxAlias
   )
 
-  Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
-    "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
-    "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
-    Default { Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+  $eolConnectedCheck = priv_CheckEOLConnection
+  
+  if ( $eolConnectedCheck -eq $true ) {
+
+    Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
+      "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+      "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+      Default { Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+    }
+
+    Get-Recipient $SourceMailbox | 
+        Select-Object Name -Expand EmailAddresses | 
+        Where {$_ -like 'smtp*'}
+
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
   }
- 
-  Get-Recipient $SourceMailbox | 
-      Select-Object Name -Expand EmailAddresses | 
-      Where {$_ -like 'smtp*'}
 }
 
 function Add-MboxPermission {
@@ -36,37 +44,44 @@ function Add-MboxPermission {
   }
 
   process {
-    $UserMailbox | ForEach {
-      $CurrentUser = $_
-      Switch ($AccessRights) {
-        "FullAccess" {
-          if ($AutoMapping) {
-            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
-            Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False
-          } else {
-            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
-            Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False
+    $eolConnectedCheck = priv_CheckEOLConnection
+    
+    if ( $eolConnectedCheck -eq $true ) {
+      $UserMailbox | ForEach {
+        $CurrentUser = $_
+        Switch ($AccessRights) {
+          "FullAccess" {
+            if ($AutoMapping) {
+              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False
+            } else {
+              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False
+            }
           }
-        }
-        "SendAs" {
-          Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
-          Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
-        }
-        "All" {
-          if ($AutoMapping) {
-            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
-            Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False
+          "SendAs" {
             Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
             Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
           }
-          else {
-            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
-            Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False
-            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
-            Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+          "All" {
+            if ($AutoMapping) {
+              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False
+              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+            }
+            else {
+              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False
+              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+            }
           }
         }
       }
+
+    } else {
+      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
     }
   }
 }
@@ -82,21 +97,27 @@ function Change-MboxLanguage {
   )
   
   Set-Variable ProgressPreference Continue
-  
-  if ( [string]::IsNullOrEmpty($Language) ) { $Language = "it-IT" }
+  $eolConnectedCheck = priv_CheckEOLConnection
+    
+  if ( $eolConnectedCheck -eq $true ) {
+    if ( [string]::IsNullOrEmpty($Language) ) { $Language = "it-IT" }
 
-  if ( [string]::IsNullOrEmpty($CSV) ) {
-    if ( -not([string]::IsNullOrEmpty($SourceMailbox)) ) {
-      Write-Progress -Activity "Changing $($SourceMailbox) language to $($Language) ..."
-      Set-MailboxRegionalConfiguration $SourceMailbox -LocalizeDefaultFolderName:$True -Language $Language
-      Get-MailboxRegionalConfiguration $SourceMailbox
+    if ( [string]::IsNullOrEmpty($CSV) ) {
+      if ( -not([string]::IsNullOrEmpty($SourceMailbox)) ) {
+        Write-Progress -Activity "Changing $($SourceMailbox) language to $($Language) ..."
+        Set-MailboxRegionalConfiguration $SourceMailbox -LocalizeDefaultFolderName:$True -Language $Language
+        Get-MailboxRegionalConfiguration $SourceMailbox
+      }
+    } else {
+      Import-CSV $CSV | ForEach {
+        Write-Progress -Activity "Changing $($_.EmailAddress) language to $($Language) ..."
+        Set-MailboxRegionalConfiguration $_.EmailAddress -LocalizeDefaultFolderName:$True -Language $Language
+        Get-MailboxRegionalConfiguration $_.EmailAddress
+      }
     }
+
   } else {
-    Import-CSV $CSV | ForEach {
-      Write-Progress -Activity "Changing $($_.EmailAddress) language to $($Language) ..."
-      Set-MailboxRegionalConfiguration $_.EmailAddress -LocalizeDefaultFolderName:$True -Language $Language
-      Get-MailboxRegionalConfiguration $_.EmailAddress
-    }
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
   }
 }
 
@@ -118,26 +139,34 @@ function Export-MboxAlias {
     $mboxCounter = 0
     $Result = @()
     Set-Variable ProgressPreference Continue
-
-    if (([string]::IsNullOrEmpty($Domain)) -And ([string]::IsNullOrEmpty($SourceMailbox))) {
-      $All = $True
-    }
-
-    if (-not([string]::IsNullOrEmpty($Domain))) {
-      $SourceMailbox = Get-Recipient -ResultSize Unlimited | 
-          Where { $_.RecipientTypeDetails -ne "GuestMailUser" -And $_.EmailAddresses -like "*@" + $Domain }
-      $CSV = $True
-    }
-
-    if ($All) {
-      Write-Host "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient." -f "Yellow"
-      $SourceMailbox = Get-Recipient -ResultSize Unlimited | 
-          Where { $_.RecipientTypeDetails -ne "GuestMailUser" }
-      $CSV = $True
-    }
+    $eolConnectedCheck = priv_CheckEOLConnection
     
-    if (-not([string]::IsNullOrEmpty($folderCSV))) { $CSV = $True }
-    if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
+    if ( $eolConnectedCheck -eq $true ) {
+
+      if (([string]::IsNullOrEmpty($Domain)) -And ([string]::IsNullOrEmpty($SourceMailbox))) {
+        $All = $True
+      }
+
+      if (-not([string]::IsNullOrEmpty($Domain))) {
+        $SourceMailbox = Get-Recipient -ResultSize Unlimited | 
+            Where { $_.RecipientTypeDetails -ne "GuestMailUser" -And $_.EmailAddresses -like "*@" + $Domain }
+        $CSV = $True
+      }
+
+      if ($All) {
+        Write-Host "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient." -f "Yellow"
+        $SourceMailbox = Get-Recipient -ResultSize Unlimited | 
+            Where { $_.RecipientTypeDetails -ne "GuestMailUser" }
+        $CSV = $True
+      }
+      
+      if (-not([string]::IsNullOrEmpty($folderCSV))) { $CSV = $True }
+      if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
+    
+    } else {
+      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Return
+    }
   }
 
   process {
@@ -193,45 +222,54 @@ function Export-MboxPermission {
   $Result = @()
   $mboxCounter = 0
   Set-Variable ProgressPreference Continue
+  $eolConnectedCheck = priv_CheckEOLConnection
+  
+  if ( $eolConnectedCheck -eq $true ) {
 
-  Switch ($RecipientType) {
-    "User" { $Mailboxes = Get-Mailbox -ResultSize Unlimited | Where { $_.RecipientTypeDetails -eq "UserMailbox" } }
-    "Shared" { $Mailboxes = Get-Mailbox -ResultSize Unlimited | Where { $_.RecipientTypeDetails -eq "SharedMailbox" } }
-    "Room" { $Mailboxes = Get-Mailbox -ResultSize Unlimited | Where { $_.RecipientTypeDetails -eq "RoomMailbox" } }
-    "All" { 
-      Write-Host "WARNING: no recipient type specified, I scan all the mailboxes, please be patient." -f "Yellow"
-      $Mailboxes = Get-Mailbox -ResultSize Unlimited | 
-          Where { $_.RecipientTypeDetails -eq "UserMailbox" -Or $_.RecipientTypeDetails -eq "SharedMailbox" -Or $_.RecipientTypeDetails -eq "RoomMailbox" }
+    Switch ($RecipientType) {
+      "User" { $Mailboxes = Get-Mailbox -ResultSize Unlimited | Where { $_.RecipientTypeDetails -eq "UserMailbox" } }
+      "Shared" { $Mailboxes = Get-Mailbox -ResultSize Unlimited | Where { $_.RecipientTypeDetails -eq "SharedMailbox" } }
+      "Room" { $Mailboxes = Get-Mailbox -ResultSize Unlimited | Where { $_.RecipientTypeDetails -eq "RoomMailbox" } }
+      "All" { 
+        Write-Host "WARNING: no recipient type specified, I scan all the mailboxes, please be patient." -f "Yellow"
+        $Mailboxes = Get-Mailbox -ResultSize Unlimited | 
+            Where { $_.RecipientTypeDetails -eq "UserMailbox" -Or $_.RecipientTypeDetails -eq "SharedMailbox" -Or $_.RecipientTypeDetails -eq "RoomMailbox" }
+      }
     }
+
+    $Mailboxes | ForEach {
+      $CurrentMailbox = $_
+      $CurrentEXOMailbox = Get-EXOMailbox $CurrentMailbox
+      
+      $mboxCounter++
+      $PercentComplete = (($mboxCounter / $Mailboxes.Count) * 100)
+      Write-Progress -Activity "Processing $($CurrentEXOMailbox.PrimarySmtpAddress)" -Status "$mboxCounter out of $($Mailboxes.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+
+      $MboxPermSendAs = Get-RecipientPermission $CurrentEXOMailbox.PrimarySmtpAddress -AccessRights SendAs |
+          Where { $_.Trustee.ToString() -ne "NT AUTHORITY\SELF" -And $_.Trustee.ToString() -notlike "S-1-5*" } |
+          ForEach { $_.Trustee.ToString() }
+
+      $MboxPermFullAccess = Get-EXOMailboxPermission $CurrentEXOMailbox.PrimarySmtpAddress |
+          Where { $_.AccessRights -eq "FullAccess" -and !$_.IsInherited } |
+          ForEach { $_.User.ToString() }
+
+      $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+        Mailbox = $CurrentEXOMailbox.DisplayName
+        "Mailbox Address" = $CurrentEXOMailbox.PrimarySmtpAddress
+        "Recipient Type" = $CurrentEXOMailbox.RecipientTypeDetails
+        FullAccess = $MboxPermFullAccess -join ", "
+        SendAs = $MboxPermSendAs -join ", "
+        SendOnBehalfTo = $CurrentEXOMailbox.GrantSendOnBehalfTo
+      })
+    }
+
+    $folder = priv_CheckFolder($folderCSV)
+    $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MboxPermissions-Report.csv")
+    $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+  
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
   }
-
-  $Mailboxes | ForEach {
-    $CurrentMailbox = $_
-    
-    $mboxCounter++
-    $PercentComplete = (($mboxCounter / $Mailboxes.Count) * 100)
-    Write-Progress -Activity "Processing $((Get-Mailbox $CurrentMailbox).PrimarySmtpAddress)" -Status "$mboxCounter out of $($Mailboxes.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
-
-    $MboxPermSendAs = Get-RecipientPermission $(Get-Mailbox $CurrentMailbox).PrimarySmtpAddress -AccessRights SendAs |
-        Where { $_.Trustee.ToString() -ne "NT AUTHORITY\SELF" -And $_.Trustee.ToString() -notlike "S-1-5*" } |
-        ForEach { $_.Trustee.ToString() }
-
-    $MboxPermFullAccess = Get-MailboxPermission $(Get-Mailbox $CurrentMailbox).PrimarySmtpAddress |
-        Where { $_.AccessRights -eq "FullAccess" -and !$_.IsInherited } |
-        ForEach { $_.User.ToString() }
-
-    $Result += New-Object -TypeName PSObject -Property $([ordered]@{
-      Mailbox = $(Get-Mailbox $CurrentMailbox).DisplayName
-      "Mailbox Address" = $(Get-Mailbox $CurrentMailbox).PrimarySmtpAddress
-      "Recipient Type" = $(Get-Mailbox $CurrentMailbox).RecipientTypeDetails
-      FullAccess = $MboxPermFullAccess -join ", "
-      SendAs = $MboxPermSendAs -join ", "
-      SendOnBehalfTo = $(Get-Mailbox $CurrentMailbox).GrantSendOnBehalfTo
-    })
-  }
-  $folder = priv_CheckFolder($folderCSV)
-  $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MboxPermissions-Report.csv")
-  $Result | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 }
 
 function Get-MboxAlias {
@@ -240,21 +278,28 @@ function Get-MboxAlias {
     [string] $SourceMailbox
   )
   
-  $getAddresses = Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | ForEach-Object {
-    if ($_ -clike 'smtp:*') {
-      [PSCustomObject]@{
-        Primary = $null
-        Alias = $_.Replace('smtp:', '')
-      }
-    } elseif ($_ -clike 'SMTP:*') {
-      [PSCustomObject]@{
-        Primary = $_.Replace('SMTP:', '')
-        Alias = $null
+  $eolConnectedCheck = priv_CheckEOLConnection
+
+  if ( $eolConnectedCheck -eq $true ) {
+    $getAddresses = Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | ForEach-Object {
+      if ($_ -clike 'smtp:*') {
+        [PSCustomObject]@{
+          Primary = $null
+          Alias = $_.Replace('smtp:', '')
+        }
+      } elseif ($_ -clike 'SMTP:*') {
+        [PSCustomObject]@{
+          Primary = $_.Replace('SMTP:', '')
+          Alias = $null
+        }
       }
     }
-  }
 
-  $getAddresses | Format-Table -AutoSize
+    $getAddresses | Format-Table -AutoSize
+
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+  }
 }
 
 function Get-MboxPermission {
@@ -264,65 +309,72 @@ function Get-MboxPermission {
   )
 
   $Result = @()
+  $eolConnectedCheck = priv_CheckEOLConnection
+  
+  if ( $eolConnectedCheck -eq $true ) {
 
-  $MboxPermFullAccess = Get-MailboxPermission $(Get-Mailbox $SourceMailbox).PrimarySmtpAddress |
-      Where-Object { $_.AccessRights -eq "FullAccess" -and !$_.IsInherited } |
-      ForEach-Object {
-          $UserMailbox = $_.User.ToString()
-          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
-          $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
+    $MboxPermFullAccess = Get-MailboxPermission $(Get-Mailbox $SourceMailbox).PrimarySmtpAddress |
+        Where-Object { $_.AccessRights -eq "FullAccess" -and !$_.IsInherited } |
+        ForEach-Object {
+            $UserMailbox = $_.User.ToString()
+            $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
+            $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
 
-          $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
-          if ($existingUserObject) {
-              $existingUserObject.AccessRights += ", FullAccess"
-          } else {
-              $Result += [PSCustomObject]@{
-                  User = $DisplayName
-                  UserMailbox = $PrimarySmtpAddress
-                  AccessRights = "FullAccess"
-              }
-          }
-      }
+            $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
+            if ($existingUserObject) {
+                $existingUserObject.AccessRights += ", FullAccess"
+            } else {
+                $Result += [PSCustomObject]@{
+                    User = $DisplayName
+                    UserMailbox = $PrimarySmtpAddress
+                    AccessRights = "FullAccess"
+                }
+            }
+        }
 
-  $MboxPermSendAs = Get-RecipientPermission $(Get-Mailbox $SourceMailbox).PrimarySmtpAddress -AccessRights SendAs |
-      Where-Object { $_.Trustee.ToString() -ne "NT AUTHORITY\SELF" -And $_.Trustee.ToString() -notlike "S-1-5*" } |
-      ForEach-Object {
-          $UserMailbox = $_.Trustee.ToString()
-          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
-          $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
+    $MboxPermSendAs = Get-RecipientPermission $(Get-Mailbox $SourceMailbox).PrimarySmtpAddress -AccessRights SendAs |
+        Where-Object { $_.Trustee.ToString() -ne "NT AUTHORITY\SELF" -And $_.Trustee.ToString() -notlike "S-1-5*" } |
+        ForEach-Object {
+            $UserMailbox = $_.Trustee.ToString()
+            $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
+            $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
 
-          $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
-          if ($existingUserObject) {
-              $existingUserObject.AccessRights += ", SendAs"
-          } else {
-              $Result += [PSCustomObject]@{
-                  User = $DisplayName
-                  UserMailbox = $PrimarySmtpAddress
-                  AccessRights = "SendAs"
-              }
-          }
-      }
+            $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
+            if ($existingUserObject) {
+                $existingUserObject.AccessRights += ", SendAs"
+            } else {
+                $Result += [PSCustomObject]@{
+                    User = $DisplayName
+                    UserMailbox = $PrimarySmtpAddress
+                    AccessRights = "SendAs"
+                }
+            }
+        }
 
-  $MboxPermSendOnBehalfTo = $(Get-Mailbox $SourceMailbox).GrantSendOnBehalfTo |
-      ForEach-Object {
-          $UserMailbox = $_
-          $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
-          $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
+    $MboxPermSendOnBehalfTo = $(Get-Mailbox $SourceMailbox).GrantSendOnBehalfTo |
+        ForEach-Object {
+            $UserMailbox = $_
+            $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
+            $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
 
-          $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
-          if ($existingUserObject) {
-              $existingUserObject.AccessRights += ", SendOnBehalfTo"
-          } else {
-              $Result += [PSCustomObject]@{
-                  User = $DisplayName
-                  UserMailbox = $PrimarySmtpAddress
-                  AccessRights = "SendOnBehalfTo"
-              }
-          }
-      }
+            $existingUserObject = $Result | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
+            if ($existingUserObject) {
+                $existingUserObject.AccessRights += ", SendOnBehalfTo"
+            } else {
+                $Result += [PSCustomObject]@{
+                    User = $DisplayName
+                    UserMailbox = $PrimarySmtpAddress
+                    AccessRights = "SendOnBehalfTo"
+                }
+            }
+        }
 
-  Write-Host "`nAccess Rights on $((Get-Mailbox $SourceMailbox).DisplayName) ($((Get-Mailbox $SourceMailbox).PrimarySmtpAddress))" -f "Yellow"
-  $Result
+    Write-Host "`nAccess Rights on $((Get-Mailbox $SourceMailbox).DisplayName) ($((Get-Mailbox $SourceMailbox).PrimarySmtpAddress))" -f "Yellow"
+    $Result
+
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+  }
 }
 
 function New-SharedMailbox {
@@ -335,11 +387,17 @@ function New-SharedMailbox {
     [string] $SharedMailboxAlias
   )
 
-  New-Mailbox -Name $SharedMailboxDisplayName -Alias $SharedMailboxAlias -Shared -PrimarySmtpAddress $SharedMailboxSMTPAddress
-  Write-Host "Set outgoing e-mail copy save for $($SharedMailboxSMTPAddress)" -f "Yellow"
-  Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSentAsEnabled $True
-	Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSendOnBehalfEnabled $True
-  Write-Host "All done, remember to set access and editing rights to the new mailbox."
+  $eolConnectedCheck = priv_CheckEOLConnection
+
+  if ( $eolConnectedCheck -eq $true ) {
+    New-Mailbox -Name $SharedMailboxDisplayName -Alias $SharedMailboxAlias -Shared -PrimarySmtpAddress $SharedMailboxSMTPAddress
+    Write-Host "Set outgoing e-mail copy save for $($SharedMailboxSMTPAddress)" -f "Yellow"
+    Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSentAsEnabled $True
+    Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSendOnBehalfEnabled $True
+    Write-Host "All done, remember to set access and editing rights to the new mailbox."
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+  }
 }
 
 function Remove-MboxAlias {
@@ -350,15 +408,23 @@ function Remove-MboxAlias {
     [string] $MailboxAlias
   )
 
-  Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
-    "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
-    "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
-    Default { Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+  $eolConnectedCheck = priv_CheckEOLConnection
+
+  if ( $eolConnectedCheck -eq $true ) {
+
+    Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
+      "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+      "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+      Default { Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+    }
+    
+    Get-Recipient $SourceMailbox | 
+        Select-Object Name -Expand EmailAddresses | 
+        Where {$_ -like 'smtp*'}
+
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
   }
-  
-  Get-Recipient $SourceMailbox | 
-      Select-Object Name -Expand EmailAddresses | 
-      Where {$_ -like 'smtp*'}
 }
 
 function Remove-MboxPermission {
@@ -376,16 +442,23 @@ function Remove-MboxPermission {
   }
 
   process {
-    $UserMailbox | ForEach {
-      $CurrentUser = $_
-      Switch ($AccessRights) {
-        "FullAccess" { Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False }
-        "SendAs" { Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False }
-        "All" {
-          Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False
-          Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+    $eolConnectedCheck = priv_CheckEOLConnection
+    
+    if ( $eolConnectedCheck -eq $true ) {
+      $UserMailbox | ForEach {
+        $CurrentUser = $_
+        Switch ($AccessRights) {
+          "FullAccess" { Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False }
+          "SendAs" { Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False }
+          "All" {
+            Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False
+            Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+          }
         }
       }
+
+    } else {
+      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
     }
   }
 }
@@ -403,26 +476,33 @@ function Set-MboxRulesQuota {
   }
 
   process {
-    $SourceMailbox | ForEach {
-      try {
-        $CurrentMailbox = $_
-        $GetCM = Get-Mailbox $CurrentMailbox
-        
-        $mboxCounter++
-        $PercentComplete = (($mboxCounter / $SourceMailbox.Count) * 100)
-        Write-Progress -Activity "Processing $($GetCM.PrimarySmtpAddress)" -Status "$mboxCounter out of $($SourceMailbox.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+    $eolConnectedCheck = priv_CheckEOLConnection
 
-        Set-Mailbox $CurrentMailbox -RulesQuota 256KB
+    if ( $eolConnectedCheck -eq $true ) {
+      $SourceMailbox | ForEach {
+        try {
+          $CurrentMailbox = $_
+          $GetCM = Get-Mailbox $CurrentMailbox
+          
+          $mboxCounter++
+          $PercentComplete = (($mboxCounter / $SourceMailbox.Count) * 100)
+          Write-Progress -Activity "Processing $($GetCM.PrimarySmtpAddress)" -Status "$mboxCounter out of $($SourceMailbox.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
-        $Result += New-Object -TypeName PSObject -Property $([ordered]@{
-          PrimarySmtpAddress = $GetCM.PrimarySmtpAddress
-          "Rules Quota" = $GetCM.RulesQuota
-        })
-      } catch {
-        Write-Error $_.Exception.Message
+          Set-Mailbox $CurrentMailbox -RulesQuota 256KB
+
+          $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+            PrimarySmtpAddress = $GetCM.PrimarySmtpAddress
+            "Rules Quota" = $GetCM.RulesQuota
+          })
+        } catch {
+          Write-Error $_.Exception.Message
+        }
       }
+      $Result
+
+    } else {
+      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
     }
-    $Result
   }
 }
 
@@ -441,32 +521,39 @@ function Set-SharedMboxCopyForSent {
   }
 
   process {
-    $SourceMailbox | ForEach {
-      try {
-        $CurrentMailbox = $_
-        $GetCM = Get-Mailbox $CurrentMailbox
-        if ( $GetCM.RecipientTypeDetails -eq "SharedMailbox") {
-          $mboxCounter++
-          $PercentComplete = (($mboxCounter / $SourceMailbox.Count) * 100)
-          Write-Progress -Activity "Processing $($GetCM.PrimarySmtpAddress)" -Status "$mboxCounter out of $($SourceMailbox.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+    $eolConnectedCheck = priv_CheckEOLConnection
 
-          Set-Mailbox $CurrentMailbox -MessageCopyForSentAsEnabled $True
-          Set-Mailbox $CurrentMailbox -MessageCopyForSendOnBehalfEnabled $True
+    if ( $eolConnectedCheck -eq $true ) {
+      $SourceMailbox | ForEach {
+        try {
+          $CurrentMailbox = $_
+          $GetCM = Get-Mailbox $CurrentMailbox
+          if ( $GetCM.RecipientTypeDetails -eq "SharedMailbox") {
+            $mboxCounter++
+            $PercentComplete = (($mboxCounter / $SourceMailbox.Count) * 100)
+            Write-Progress -Activity "Processing $($GetCM.PrimarySmtpAddress)" -Status "$mboxCounter out of $($SourceMailbox.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
-          $Result += New-Object -TypeName PSObject -Property $([ordered]@{
-            PrimarySmtpAddress = $GetCM.PrimarySmtpAddress
-            "Copy for SentAs" = $GetCM.MessageCopyForSentAsEnabled
-            "Copy for SendOnBehalf" = $GetCM.MessageCopyForSendOnBehalfEnabled
-          })
-        } else {
-          $ResultError += "`e[31m $($CurrentMailbox) is not a Shared Mailbox. `e[0m"
-        } 
-      } catch {
-        Write-Error $_.Exception.Message
+            Set-Mailbox $CurrentMailbox -MessageCopyForSentAsEnabled $True
+            Set-Mailbox $CurrentMailbox -MessageCopyForSendOnBehalfEnabled $True
+
+            $Result += New-Object -TypeName PSObject -Property $([ordered]@{
+              PrimarySmtpAddress = $GetCM.PrimarySmtpAddress
+              "Copy for SentAs" = $GetCM.MessageCopyForSentAsEnabled
+              "Copy for SendOnBehalf" = $GetCM.MessageCopyForSendOnBehalfEnabled
+            })
+          } else {
+            $ResultError += "`e[31m $($CurrentMailbox) is not a Shared Mailbox. `e[0m"
+          } 
+        } catch {
+          Write-Error $_.Exception.Message
+        }
       }
+      $Result; ""
+      $ResultError
+
+    } else {
+      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
     }
-    $Result; ""
-    $ResultError
   }
 }
 
