@@ -47,7 +47,7 @@ function priv_CheckEOLConnection {
 
 function priv_CheckFolder($path) {
     if ([string]::IsNullOrEmpty($path)) {
-        $path = ".\"
+        $path = $PWD
     } else {
         $path = $path.TrimEnd('\')
     }
