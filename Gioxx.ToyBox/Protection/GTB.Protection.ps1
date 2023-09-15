@@ -252,20 +252,30 @@ function Export-QuarantineEML {
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
-
-    $e = Get-QuarantineMessage -MessageId $($messageID) | 
-        Export-QuarantineMessage; $bytes = [Convert]::FromBase64String($e.eml); [IO.File]::WriteAllBytes("$($exportFolder)\QuarantineEML.eml", $bytes)
+    if ( (Get-QuarantineMessage -MessageId $($messageID)).QuarantineTypes -eq "Malware" ) {
+      $e = Get-QuarantineMessage -MessageId $($messageID) | Export-QuarantineMessage
+      $bytes = [Convert]::FromBase64String($e.eml)
+      [IO.File]::WriteAllBytes("$($exportFolder)\QuarantineEML.eml", $bytes)
+    } else {
+      $e = Get-QuarantineMessage -MessageId $($messageID) | Export-QuarantineMessage
+      $txt = [System.Text.Encoding]::Ascii.GetString([System.Convert]::FromBase64String($e.eml))
+      [IO.File]::WriteAllText("$($exportFolder)\QuarantineEML.eml", $txt)
+    }    
 
     Invoke-Item "$($exportFolder)\QuarantineEML.eml"
     Start-Sleep -s 3
     Remove-Item "$($exportFolder)\QuarantineEML.eml"
     
-    $options_result = priv_TakeDecisionOptions "Should I release the message to all recipients?" "&Yes" "&No" "Release message." "Do not release the message." 1
+    $options_result = priv_TakeDecisionOptions "Should I release the message to all recipients?" "&Yes" "&No" "Release the message." "Do not release the message." 1
     if ($options_result -eq 0) {
-      Get-QuarantineMessage -MessageId $($messageID) | 
-        Release-QuarantineMessage -ReleaseToAll
+      $reportFalsePositive = priv_TakeDecisionOptions "Do you want to report false positive to Microsoft?" "&Yes" "&No" "Report false positive message to Microsoft." "Do not report false positive message to Microsoft." 1
+      if ( $reportFalsePositive -eq 0 ) {
+        Get-QuarantineMessage -MessageId $($messageID) | Release-QuarantineMessage -ReleaseToAll -ReportFalsePositive -Confirm:$false
+      } else { 
+        Get-QuarantineMessage -MessageId $($messageID) | Release-QuarantineMessage -ReleaseToAll
+      }
     } else {
-      Write-Host "Operation canceled (Aborted by user)." -f "Yellow"
+      Write-Host "Message not released (Aborted by user)." -f "Yellow"
     }
 
   } else {
@@ -369,6 +379,7 @@ function Get-QuarantineToRelease {
         ReceivedTime = $Message.ReceivedTime
         QuarantineTypes = $Message.QuarantineTypes
         Released = $Message.Released
+        MessageId = $Message.MessageId
         Identity = $Message.Identity
       })
     }
@@ -381,26 +392,33 @@ function Get-QuarantineToRelease {
       
       if ( $ReleaseQuarantine -ne $null ) {
         if ( $ReleaseQuarantine.Count -eq 1 ) {
-          $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Subject)?" "&Yes" "&No" "Release message." "Do not release message."
-          if ($decision -eq 0) {
-            
-            $reportFalsePositive = priv_TakeDecisionOptions "Do you want to report false positive to Microsoft?" "&Yes" "&No" "Report false positive message to Microsoft." "Do not report false positive message to Microsoft." 1
-            if ( $reportFalsePositive -eq 0 ) {
-              Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -ReportFalsePositive -Confirm:$false
-            } else { 
-              Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -Confirm:$false
-            }
-            
-            $released = Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity
-            
-            $releasedResults = @()
-            $releasedResults += New-Object -TypeName PSObject -Property $([ordered]@{
-              Subject = priv_MaxLenghtSubString $released.Subject 40
-              SenderAddress = priv_MaxLenghtSubString $released.SenderAddress $MaxFieldLength
-              Released = $released.Released
-              ReleasedUser = $released.ReleasedUser
-            })
-            $releasedResults | Sort-Object Subject | Select-Object Subject,SenderAddress,Released,ReleasedUser | Out-Host
+          $single_menu = priv_TakeDecisionOptions "What do you want to do with $($ReleaseQuarantine.Subject)?" "&Release" "&Analyze" "Release the message." "Export a copy of the EML file for analysis."
+
+          Switch ( $single_menu ) {
+            0 { 
+                $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Subject)?" "&Yes" "&No" "Release the message." "Do not release message."
+                if ($decision -eq 0) {
+                  
+                  $reportFalsePositive = priv_TakeDecisionOptions "Do you want to report false positive to Microsoft?" "&Yes" "&No" "Report false positive message to Microsoft." "Do not report false positive message to Microsoft." 1
+                  if ( $reportFalsePositive -eq 0 ) {
+                    Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -ReportFalsePositive -Confirm:$false
+                  } else { 
+                    Release-QuarantineMessage -Identity $ReleaseQuarantine.Identity -ReleaseToAll -Confirm:$false
+                  }
+                  
+                  $released = Get-QuarantineMessage -Identity $ReleaseQuarantine.Identity
+                  
+                  $releasedResults = @()
+                  $releasedResults += New-Object -TypeName PSObject -Property $([ordered]@{
+                    Subject = priv_MaxLenghtSubString $released.Subject 40
+                    SenderAddress = priv_MaxLenghtSubString $released.SenderAddress $MaxFieldLength
+                    Released = $released.Released
+                    ReleasedUser = $released.ReleasedUser
+                  })
+                  $releasedResults | Sort-Object Subject | Out-Host
+                }
+              }
+            1 { Export-QuarantineEML -messageID "$($ReleaseQuarantine.MessageId)" }
           }
         } else {
           $ReleaseQuarantine | ForEach {
