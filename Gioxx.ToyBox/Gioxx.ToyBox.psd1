@@ -16,7 +16,7 @@
     ".\Statistics\GTB.Stats.ps1"
   )
 
-  ModuleVersion = '0.3'
+  ModuleVersion = '0.4'
   GUID = '17aadfab-2909-411f-9266-29177b510755'
   Author = 'Gioxx'
   CompanyName = 'Gioxx.org'
@@ -74,7 +74,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = 'Preview7'
+      Prerelease = '9-25(1)'
       RequireLicenseAcceptance = $False
 
     }

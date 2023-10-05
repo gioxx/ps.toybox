@@ -12,7 +12,14 @@ function Add-MboxAlias {
   
   if ( $eolConnectedCheck -eq $true ) {
 
-    Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
+    try {
+      $GRRTD = (Get-Recipient $SourceMailbox -ErrorAction Stop).RecipientTypeDetails
+    } catch {
+      Write-Host "`nUsage: Add-MboxAlias -SourceMailbox mailbox@contoso.com -MailboxAlias alias@contoso.com`n" -f "Yellow"
+      Write-Error $_.Exception.Message
+    }
+
+    Switch ($GRRTD) {
       "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
       "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
       Default { Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
@@ -53,28 +60,28 @@ function Add-MboxPermission {
           "FullAccess" {
             if ($AutoMapping) {
               Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Null
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Host
             } else {
               Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Null
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Host
             }
           }
           "SendAs" {
             Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
-            Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Null
+            Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
           }
           "All" {
             if ($AutoMapping) {
               Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Null
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Host
               Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
-              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Null
+              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
             }
             else {
               Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) without AutoMapping ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Null
+              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Host
               Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
-              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Null
+              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
             }
           }
         }
