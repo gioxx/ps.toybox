@@ -275,7 +275,7 @@ function Export-QuarantineEML {
         Get-QuarantineMessage -MessageId $($messageID) | Release-QuarantineMessage -ReleaseToAll
       }
     } else {
-      Write-Host "Message not released (Aborted by user)." -f "Yellow"
+      Write-Host "Message not released (aborted by user)." -f "Yellow"
     }
 
   } else {
@@ -565,7 +565,7 @@ function Release-QuarantineMessageId {
               }
             $releasedResults | Format-Table -AutoSize
           } else {
-            Write-Host "No quarantined messages to release with id $($CurrentMessage) (cause already released)." -f "Yellow"
+            Write-Host "No quarantined messages to release with id $($CurrentMessage) (already released or not found yet)." -f "Yellow"
           }
         } catch {
           Write-Error $_.Exception.Message
