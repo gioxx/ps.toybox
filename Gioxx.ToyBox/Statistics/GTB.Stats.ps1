@@ -19,10 +19,10 @@ function Export-MboxStatistics {
     $ProcessedCount = 0
 
     if ( [string]::IsNullOrEmpty($user) ) { 
-      $Mailboxes = Get-Recipient -ResultSize Unlimited -WarningAction SilentlyContinue
+      $Mailboxes = Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue
       $WriteToCSV = $True
     } else { 
-      $Mailboxes = Get-Recipient $user
+      $Mailboxes = Get-Mailbox $user
       $WriteToCSV = $False
     }
 
