@@ -40,7 +40,7 @@ function Add-MboxPermission {
     [string] $SourceMailbox,
     [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="E-mail address of the mailbox to which to allow access (e.g. mario.rossi@contoso.com)")]
     [string[]] $UserMailbox,
-    [Parameter(Mandatory=$False, HelpMessage="Type of access to be allowed (All, FullAccess, SendAs)")]
+    [Parameter(Mandatory=$False, HelpMessage="Type of access to be allowed (All, FullAccess, SendAs, SendOnBehalfTo)")]
     [string] $AccessRights,
     [Parameter(Mandatory=$False, HelpMessage="Set mailbox automapping")]
     [switch] $AutoMapping
@@ -69,6 +69,10 @@ function Add-MboxPermission {
           "SendAs" {
             Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
             Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
+          }
+          "SendOnBehalfTo" {
+            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+            Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{add="$($CurrentUser)"} -Confirm:$False | Out-Host
           }
           "All" {
             if ($AutoMapping) {
@@ -442,7 +446,7 @@ function Remove-MboxPermission {
     [string] $SourceMailbox,
     [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="E-mail address of the mailbox to which to remove access (e.g. mario.rossi@contoso.com)")]
     [string[]] $UserMailbox,
-    [Parameter(Mandatory=$False, HelpMessage="Type of access to be removed (All, FullAccess, SendAs)")]
+    [Parameter(Mandatory=$False, HelpMessage="Type of access to be removed (All, FullAccess, SendAs, SendOnBehalfTo)")]
     [string] $AccessRights
   )
 
@@ -459,9 +463,11 @@ function Remove-MboxPermission {
         Switch ($AccessRights) {
           "FullAccess" { Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False }
           "SendAs" { Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False }
+          "SendOnBehalfTo" { Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{remove="$($CurrentUser)"} -Confirm:$False }
           "All" {
             Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False
             Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+            Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{remove="$($CurrentUser)"} -Confirm:$False
           }
         }
       }
