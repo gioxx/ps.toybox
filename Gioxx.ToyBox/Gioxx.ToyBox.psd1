@@ -74,7 +74,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = '10-9(1)'
+      Prerelease = '10-11(1)'
       RequireLicenseAcceptance = $False
 
     }

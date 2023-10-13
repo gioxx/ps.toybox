@@ -294,20 +294,18 @@ function Get-MboxAlias {
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
+
     $getAddresses = Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | ForEach-Object {
       if ($_ -clike 'smtp:*') {
         [PSCustomObject]@{
-          Primary = $null
           Alias = $_.Replace('smtp:', '')
         }
       } elseif ($_ -clike 'SMTP:*') {
-        [PSCustomObject]@{
-          Primary = $_.Replace('SMTP:', '')
-          Alias = $null
-        }
+        $getPrimary = $_.Replace('SMTP:', '')
       }
     }
 
+    Write-Host "`nPrimarySmtpAddress: $($getPrimary)" -f "Yellow"
     $getAddresses | Format-Table -AutoSize
 
   } else {
