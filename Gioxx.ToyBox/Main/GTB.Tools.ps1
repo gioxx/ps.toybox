@@ -33,11 +33,11 @@ function priv_CheckEOLConnection {
                 }
                 $eolConnected = $true
             } catch {
-                ""; Write-Host "Can't install Exchange Online Management modules. `nPlease check logs." -f "Red"
+                Write-Host "`nCan't install Exchange Online Management modules. `nPlease check logs." -f "Red"
                 exit
             }
         } else {
-            ""; Write-Host "Microsoft Exchange Online Management module is required to run this script. `nPlease install module using Install-Module ExchangeOnlineManagement cmdlet." -f "Red"
+            Write-Host "`nMicrosoft Exchange Online Management module is required to run this script. `nPlease install module using Install-Module ExchangeOnlineManagement cmdlet." -f "Red"
             exit
         }
     }
@@ -80,11 +80,11 @@ function priv_CheckMGGraphModule {
                 Connect-MgGraph
                 $mggConnected = $true
             } catch {
-                ""; Write-Host "Can't install and import Graph modules. `nPlease check logs." -f "Red"
+                Write-Host "`nCan't install and import Graph modules. `nPlease check logs." -f "Red"
                 exit
             }
         } else {
-            ""; Write-Host "Microsoft Graph PowerShell module is required to run this script. `nPlease install module using Install-Module Microsoft.Graph cmdlet." -f "Red"
+            Write-Host "`nMicrosoft Graph PowerShell module is required to run this script. `nPlease install module using Install-Module Microsoft.Graph cmdlet." -f "Red"
             exit
         }
     }

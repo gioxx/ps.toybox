@@ -6,7 +6,7 @@ function Export-MboxStatistics {
     [string] $user,
     [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")]
     [string] $folderCSV,
-    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Round up the values of ArchiveWarningQuotaInGB and ArchiveQuotaInGB (by excess).")]
+    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Round up the values of ArchiveWarningQuotaInGB and ArchiveQuotaInGB (by excess)")]
     [switch] $Round
   )
   
@@ -64,7 +64,7 @@ function Export-MboxStatistics {
         "Archive Quota (GB)" = if ( $Mbox.ArchiveDatabase -ne $null ) { if ( $Round ) { [Math]::Ceiling($Mbox.ArchiveQuota -Replace " GB.*") } else { $Mbox.ArchiveQuota -Replace " GB.*" } } else { $null }
         AutoExpandingArchiveEnabled = $Mbox.AutoExpandingArchiveEnabled
         })
-      }
+    }
 
     if ( $WriteToCSV ) {
       $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MailboxStatistics.csv")
