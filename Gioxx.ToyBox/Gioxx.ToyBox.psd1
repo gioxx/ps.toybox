@@ -12,6 +12,7 @@
     '.\Main\GTB.Tools.ps1',
     '.\Main\GTB.Xtras.ps1',
     ".\Protection\GTB.Protection.ps1",
+    ".\Protection\GTB.Quarantine.ps1",
     ".\Rooms\GTB.Room.ps1",
     ".\Statistics\GTB.Stats.ps1"
   )
@@ -58,7 +59,10 @@
     "Set-MboxRulesQuota",
     "Set-OoO",
     "Set-SharedMboxCopyForSent",
-    "Update-PS7"
+    "Update-PS7",
+    "User-SignOut",
+    "User-DisableDevices",
+    "User-DisableSignIn"
   )
   
   CmdletsToExport = @()
@@ -74,7 +78,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = '10-11(1)'
+      Prerelease = '10-27(1)'
       RequireLicenseAcceptance = $False
 
     }
