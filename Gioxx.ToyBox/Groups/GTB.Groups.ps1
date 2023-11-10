@@ -258,19 +258,32 @@ function Get-UserGroups {
       $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
     }
 
-    if ( (Get-Recipient $UserPrincipalName | Select RecipientTypeDetails) -ne "UserMailbox" ) {
-      # Se la casella non è personale, allora l'utente da passare a MgUser è quello del WindowsLiveID.
-      $UserPrincipalName = ( Get-Recipient $UserPrincipalName).WindowsLiveID
-    }
+    $RecipientType = (Get-Recipient $UserPrincipalName).RecipientTypeDetails
 
-    $userID = Get-MgUser -UserId $UserPrincipalName
-    $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
+    Switch ($RecipientType) {
+      "MailContact" { 
+        # If you need to analyze a MailContact you must change query in Get-MgContact instead of Get-MgUser / Get-MgContactMemberOf
+        # Credits: https://m365scripts.com/microsoft365/effortlessly-manage-office-365-contacts-using-ms-graph-powershell/
+        $userID = Get-MgContact -Filter "Mail eq '$UserPrincipalName'"
+        $groups = Get-MgContactMemberOf -OrgContactId $userID.Id | Select-Object *
+      }
+      "UserMailbox" {
+        $userID = Get-MgUser -UserId $UserPrincipalName
+        $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
+      }
+      Default {
+        # If the mailbox is not a "UserMailbox" or a "MailContact" (for example a "SharedMailbox"), then the UPN is the WindowsLiveID value.
+        $UserPrincipalName = (Get-Recipient $UserPrincipalName).WindowsLiveID
+        $userID = Get-MgUser -UserId $UserPrincipalName
+        $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
+      }
+    }
     
     $groups | ForEach {
       $groupIDs = $_.id
       $otherproperties = $_.AdditionalProperties
 
-      if ( $GridView ) {
+      if ($GridView) {
         $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
           "Group Name" = $otherproperties.displayName
           "Group Description" = $otherproperties.description
@@ -288,7 +301,7 @@ function Get-UserGroups {
       
     }
     
-    if ( $GridView ) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
+    if ($GridView) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
 
   } else {
     Write-Host "`nCan't connect or use Microsoft Graph modules. `nPlease check logs." -f "Red"
