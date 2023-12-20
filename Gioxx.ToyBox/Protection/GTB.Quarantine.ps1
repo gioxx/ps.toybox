@@ -99,26 +99,96 @@ function Get-QuarantineFromDomain {
 }
 
 function Get-QuarantineToRelease {
-  param(
-    [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Number of days to be analyzed from today (maximum 30)")]
-    [ValidateNotNullOrEmpty()]
-    [int]$Interval,
-    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Show results in a grid view")]
-    [switch] $GridView
+
+  [CmdletBinding(DefaultParameterSetName='CalendarSetOptions')]
+  param (
+      [Parameter(Mandatory=$false, ParameterSetName='CalendarSetOptions', ValueFromPipeline=$True, HelpMessage="Choose a single day from calendar")]
+      [switch]$ChooseDayFromCalendar,
+      [Parameter(Mandatory=$true, ParameterSetName='NoCalendarSetOptions', ValueFromPipeline=$True, HelpMessage="Number of days to be analyzed from today (maximum 30)")]
+      [ValidateNotNullOrEmpty()]
+      [int]$Interval,
+      [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Show results in a grid view")]
+      [switch] $GridView
   )
+
+  if ($PSCmdlet.ParameterSetName -eq 'CalendarSetOptions' -and !$ChooseDayFromCalendar) {
+      Write-Error "Number of days to be analyzed from today (maximum 30) is a mandatory value (or you must use -ChooseDayFromCalendar)."
+      return
+  }
+
+  # param(
+  #   [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Number of days to be analyzed from today (maximum 30)")]
+  #   [ValidateNotNullOrEmpty()]
+  #   [int]$Interval,
+  #   [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Choose interval selecting start date and end date from calendar")]
+  #   [switch] $ChooseDayFromCalendar,
+  #   [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Show results in a grid view")]
+  #   [switch] $GridView
+  # )
 
   Set-Variable ProgressPreference Continue
 
-  if ( $Interval -gt 30 ) { $Interval = 30 } else { $Interval = $($Interval) }
+  if ($ChooseDayFromCalendar) {
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("Microsoft.VisualBasic")
+    $objForm = New-Object Windows.Forms.Form
+    $objForm.Size = New-Object Drawing.Size @(200,190)
+    $objForm.StartPosition = "CenterScreen"
+    $objForm.KeyPreview = $True
+
+    $objForm.Add_KeyDown({
+        if ($_.KeyCode -eq "Enter") {
+          $dtmDate = $objCalendar.SelectionStart
+          $objForm.Close()
+        }
+    })
+
+    $objForm.Add_KeyDown({
+        if ($_.KeyCode -eq "Escape") {
+          $objForm.Close()
+        }
+    })
+
+    $objCalendar = New-Object System.Windows.Forms.MonthCalendar
+    $objCalendar.ShowTodayCircle = $True
+    $objCalendar.MaxSelectionCount = 1
+    $objForm.Controls.Add($objCalendar)
+    $objForm.Topmost = $True
+
+    New-Variable dtmDate -Option AllScope
+
+    Write-Host "Select the day to be analyzed in the popup and press enter" -f "Yellow"
+    $objForm.Text = "Select the day to be analyzed"
+    $objForm.Add_Shown({$objForm.Activate()})
+    [void] $objForm.ShowDialog()
+
+    if ($dtmDate) {
+      $startDate = $dtmDate.AddDays(-1)
+      $endDate = ($dtmDate)
+    } else {
+      Write-Error "You must select at least one day from the calendar."
+      return
+    }
+  }
+
+  if ($Interval) { 
+    if ( $Interval -gt 30 ) { 
+      $Interval = 30
+    } else { 
+      $Interval = $($Interval)
+    }
+
+    $startDate = (Get-Date).AddDays(-$Interval)
+    $endDate = Get-Date
+  }
+
   $arr_QuarantineToRelease = @()
   $ReleaseQuarantinePreview = @()
   $ReleaseQuarantineReleased = @()
   $ReleaseQuarantineDeleted = @()
   $Page = 1
   
-  $startDate = (Get-Date).AddDays(-$Interval)
-  $endDate = Get-Date
-
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
