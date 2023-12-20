@@ -53,16 +53,17 @@
     "Get-UserGroups",
     "New-SharedMailbox",
     "Release-QuarantineFrom",
-    "Release-QuarantineMessageId"
+    "Release-QuarantineMessageId",
     "Remove-MboxAlias",
     "Remove-MboxPermission",
     "Set-MboxRulesQuota",
     "Set-OoO",
     "Set-SharedMboxCopyForSent",
     "Update-PS7",
-    "User-SignOut",
+    "User-CloseAllPSSessions",
     "User-DisableDevices",
-    "User-DisableSignIn"
+    "User-DisableSignIn",
+    "User-SignOut"
   )
   
   CmdletsToExport = @()
@@ -78,7 +79,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = '11-08(1)'
+      Prerelease = '12-20(3)'
       RequireLicenseAcceptance = $False
 
     }

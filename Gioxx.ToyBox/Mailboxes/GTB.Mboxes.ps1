@@ -305,7 +305,7 @@ function Get-MboxAlias {
       }
     }
 
-    Write-Host "`nPrimarySmtpAddress: $($getPrimary)" -f "Yellow"
+    Write-Host "`nPrimarySmtpAddress: $($getPrimary)" -f "Cyan"
     $getAddresses | Format-Table -AutoSize
 
   } else {

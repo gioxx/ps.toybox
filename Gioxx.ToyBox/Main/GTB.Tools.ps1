@@ -56,15 +56,16 @@ function priv_CheckFolder($path) {
 
 function priv_CheckMGGraphModule {
     $mggConnected = $false
+    priv_CheckEOLConnection
 
     if ( (Get-Module -Name Microsoft.Graph -ListAvailable).count -gt 0 ) {
         try {
             Get-MgUser -ErrorAction Stop
             $mggConnected = $true
         } catch {
-            Write-Host "Please wait until I load Microsoft Graph, the operation can take a minute or more." -f "Yellow"
-            Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
-            Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
+            Write-Host "Please wait until I load Microsoft Graph, the operation may take a minute or more." -f "Yellow"
+            # Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
+            # Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
             Connect-MgGraph
             $mggConnected = $true
         }
@@ -75,8 +76,8 @@ function priv_CheckMGGraphModule {
             try {
                 Write-host "Installing Microsoft Graph PowerShell module ..."
                 Install-Module Microsoft.Graph -Repository PSGallery -Scope CurrentUser -AllowClobber -Force
-                Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
-                Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
+                # Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
+                # Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
                 Connect-MgGraph
                 $mggConnected = $true
             } catch {
