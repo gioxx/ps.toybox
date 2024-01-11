@@ -294,19 +294,27 @@ function Get-MboxAlias {
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
+    
+    $arr_Alias = @()
+    $getAddresses = Get-Recipient $SourceMailbox -ErrorAction SilentlyContinue
 
-    $getAddresses = Get-Recipient $SourceMailbox | Select-Object Name -Expand EmailAddresses | ForEach-Object {
-      if ($_ -clike 'smtp:*') {
-        [PSCustomObject]@{
-          Alias = $_.Replace('smtp:', '')
+    if ( $getAddresses -ne $null ) {
+      $getAddresses | Select-Object Name -Expand EmailAddresses | ForEach-Object {
+        if ($_ -clike 'smtp:*') {
+          $arr_Alias += [PSCustomObject]@{
+            Alias = $_.Replace('smtp:', '')
+          }
+        } elseif ($_ -clike 'SMTP:*') {
+          $getPrimary = $_.Replace('SMTP:', '')
         }
-      } elseif ($_ -clike 'SMTP:*') {
-        $getPrimary = $_.Replace('SMTP:', '')
       }
-    }
 
-    Write-Host "`nPrimarySmtpAddress: $($getPrimary)" -f "Cyan"
-    $getAddresses | Format-Table -AutoSize
+      Write-Host "PrimarySmtpAddress: $($getPrimary)" -f "Cyan" -NoNewLine
+      $arr_Alias | ft -HideTableHeaders | Out-Host
+
+    } else {
+      Write-Host "Recipient not available or not found." -f "Red"
+    }
 
   } else {
     Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"

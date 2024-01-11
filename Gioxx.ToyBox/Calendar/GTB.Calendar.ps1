@@ -103,6 +103,7 @@ function Set-OoO {
     $objForm.Topmost = $True
 
     New-Variable dtmDate -Option AllScope
+    $Status = "Enabled"
 
     if ( $Disable ) {
       Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Disabled
@@ -120,50 +121,45 @@ function Set-OoO {
     
     $InternalReply = priv_GUI_TextBox "Out of Office message for internal addresses (same server)" $proposedText
     $ExternalReply = priv_GUI_TextBox "Out of Office message for external addresses (different server)" $InternalReply
+    $AbsenceIntervalReply = priv_TakeDecisionOptions "Do you want to specify an absence interval?" "&Yes" "&No" "Specify a period of absence" "Continue without specifying a period of absence"
+    
+    if ( $AbsenceIntervalReply -eq 0 ) {
+      Write-Host "Now select the first day off in the popup and press enter" -f "Yellow"
+      $objForm.Text = "Select OoO start date (first day of absence)"
+      $objForm.Add_Shown({$objForm.Activate()})
+      [void] $objForm.ShowDialog()
+      $StartDate = $dtmDate
 
-    try {
-      $AbsenceIntervalReply = priv_TakeDecisionOptions "Do you want to specify an absence interval?" "&Yes" "&No" "Specify a period of absence" "Continue without specifying a period of absence"
-      
-      if ( $AbsenceIntervalReply -eq 0 ) {
-        Write-Host "Now select the first day off in the popup and press enter" -f "Yellow"
-        $objForm.Text = "Select OoO start date (first day of absence) or press ESC to ignore"
-        $objForm.Add_Shown({$objForm.Activate()})
-        [void] $objForm.ShowDialog()
-        $StartDate = $dtmDate
-        if ($dtmDate) {
-          Write-Host "Start date selected: $dtmDate"
-        }
-
-        Write-Host "Now select in the popup the last day of absence and press enter" -f "Yellow"
-        $objForm.Text = "Select OoO end date (last day of absence) or press ESC to ignore"
-        $objForm.Add_Shown({$objForm.Activate()})
-        [void] $objForm.ShowDialog()
-        $EndDate = $dtmDate
-        if ($dtmDate) {
-          Write-Host "End date selected: $dtmDate"
-        }
-      }
-
-      if ([string]::IsNullOrEmpty($Start) -eq $False -And [string]::IsNullOrEmpty($End) -eq $False ) {
+      if ($StartDate) {
+        Write-Host "Start date selected: $StartDate"
         $Status = "Scheduled"
       } else {
-        $Status = "Enabled"
+        Write-Error "You must select at least one day from the calendar."
+        return
       }
 
-      Switch ($Status) {
-          "Enabled" {
-            Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Enabled -InternalMessage $InternalReply -ExternalMessage $ExternalReply
-          }
-          "Scheduled" {
-            Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState Scheduled -StartTime $StartDate -EndTime $EndDate -InternalMessage $InternalReply -ExternalMessage $ExternalReply
-          }
+      Write-Host "Now select in the popup the last day of absence and press enter" -f "Yellow"
+      $objForm.Text = "Select OoO end date (last day of absence)"
+      $objForm.Add_Shown({$objForm.Activate()})
+      [void] $objForm.ShowDialog()
+      $EndDate = $dtmDate
+    
+      if ($EndDate) {
+        Write-Host "Start date selected: $EndDate"
+        $Status = "Scheduled"
+      } else {
+        Write-Error "You must select at least one day from the calendar."
+        return
       }
-      
-      Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox
-
-    } catch {
-      Write-Error $_.Exception.Message
     }
+
+    Switch ($Status) {
+        "Scheduled" { Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState "Scheduled" -StartTime $StartDate -EndTime $EndDate -InternalMessage $InternalReply -ExternalMessage $ExternalReply }
+        Default { 
+          Set-MailboxAutoReplyConfiguration -Identity $SourceMailbox -AutoReplyState "Enabled" -InternalMessage $InternalReply -ExternalMessage $ExternalReply -ExternalAudience "All" }
+    }
+    
+    Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox
 
   } else {
     Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"

@@ -18,5 +18,5 @@ New-Variable -Name MaxFieldLength -Value 35 -Scope Script -Force # Quantità car
 
 # EXPORT MODULES ===================================================================================================================================================
 
-Export-ModuleMember -Function "GTBDebug"
+# Export-ModuleMember -Function "GTBDebug"
 Export-ModuleMember -Function "Update-PS7"

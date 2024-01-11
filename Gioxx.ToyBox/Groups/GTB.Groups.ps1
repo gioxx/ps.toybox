@@ -254,54 +254,68 @@ function Get-UserGroups {
   if ( $mggConnectedCheck -eq $true ) {
     $groupList=@()
 
-    if ( $UserPrincipalName -notcontains "@" ) {
+    if ( $UserPrincipalName -inotmatch "@" ) {
       $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
+      Write-Host "Complete e-mail address not specified, user found: $($UserPrincipalName)" -f "Cyan"
     }
 
-    $RecipientType = (Get-Recipient $UserPrincipalName).RecipientTypeDetails
+    try {
+      $RecipientType = (Get-Recipient $UserPrincipalName -ErrorAction SilentlyContinue).RecipientTypeDetails
 
-    Switch ($RecipientType) {
-      "MailContact" { 
-        # If you need to analyze a MailContact you must change query in Get-MgContact instead of Get-MgUser / Get-MgContactMemberOf
-        # Credits: https://m365scripts.com/microsoft365/effortlessly-manage-office-365-contacts-using-ms-graph-powershell/
-        $userID = Get-MgContact -Filter "Mail eq '$UserPrincipalName'"
-        $groups = Get-MgContactMemberOf -OrgContactId $userID.Id | Select-Object *
-      }
-      "UserMailbox" {
-        $userID = Get-MgUser -UserId $UserPrincipalName
-        $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
-      }
-      Default {
-        # If the mailbox is not a "UserMailbox" or a "MailContact" (for example a "SharedMailbox"), then the UPN is the WindowsLiveID value.
-        $UserPrincipalName = (Get-Recipient $UserPrincipalName).WindowsLiveID
-        $userID = Get-MgUser -UserId $UserPrincipalName
-        $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
-      }
-    }
-    
-    $groups | ForEach {
-      $groupIDs = $_.id
-      $otherproperties = $_.AdditionalProperties
-
-      if ($GridView) {
-        $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
-          "Group Name" = $otherproperties.displayName
-          "Group Description" = $otherproperties.description
-          "Group Mail" = $otherproperties.mail
-          "Group Mail Nickname" = $otherproperties.mailNickname
-          "Group Mail Enabled" = $otherproperties.mailEnabled
-          "Group ID" = $groupIDs
-        })
+      if ( $RecipientType ) {
+        Switch ($RecipientType) {
+          "MailContact" { 
+            # If you need to analyze a MailContact you must change query in Get-MgContact instead of Get-MgUser / Get-MgContactMemberOf
+            # Credits: https://m365scripts.com/microsoft365/effortlessly-manage-office-365-contacts-using-ms-graph-powershell/
+            $userID = Get-MgContact -Filter "Mail eq '$UserPrincipalName'"
+            $groups = Get-MgContactMemberOf -OrgContactId $userID.Id | Select-Object *
+          }
+          "UserMailbox" {
+            # $userID = Get-MgUser -UserId $UserPrincipalName
+            $userID = Get-MgUser -UserId (Get-Recipient $UserPrincipalName).WindowsLiveID
+            $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
+          }
+          Default {
+            # If the mailbox is not a "UserMailbox" or a "MailContact" (for example a "SharedMailbox"), then the UPN is the WindowsLiveID value.
+            $UserPrincipalName = (Get-Recipient $UserPrincipalName).WindowsLiveID
+            $userID = Get-MgUser -UserId $UserPrincipalName
+            $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
+          }
+        }
       } else {
-        $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
-          "Group Name" = $otherproperties.displayName
-          "Group Mail" = $otherproperties.mail
-        })
+        Write-Host "Recipient not available or not found." -f "Red"
       }
-      
+
+      if ( $groups ) {
+        $groups | ForEach {
+          $groupIDs = $_.id
+          $otherproperties = $_.AdditionalProperties
+
+          if ($GridView) {
+            $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
+              "Group Name" = $otherproperties.displayName
+              "Group Description" = $otherproperties.description
+              "Group Mail" = $otherproperties.mail
+              "Group Mail Nickname" = $otherproperties.mailNickname
+              "Group Mail Enabled" = $otherproperties.mailEnabled
+              "Group ID" = $groupIDs
+            })
+          } else {
+            $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
+              "Group Name" = $otherproperties.displayName
+              "Group Mail" = $otherproperties.mail
+            })
+          }
+          
+        }
+        
+        if ($GridView) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
+      }
+
+    } catch {
+      Write-Host "Recipient not available or not found." -f "Red"
+      # Write-Host "Error details: $_"
     }
-    
-    if ($GridView) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
 
   } else {
     Write-Host "`nCan't connect or use Microsoft Graph modules. `nPlease check logs." -f "Red"
