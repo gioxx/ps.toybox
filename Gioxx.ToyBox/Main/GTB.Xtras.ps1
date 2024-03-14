@@ -1,36 +1,28 @@
-# Credits: https://petri.com/more-efficient-powershell-with-psreadline/
+# Source: https://petri.com/more-efficient-powershell-with-psreadline/
 Set-PSReadlineKeyHandler -Key F7 -BriefDescription HistoryList -Description "Show command history with Out-Gridview. [$($env:username)]" -ScriptBlock {
     $pattern = $null
     [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$pattern, [ref]$null)
-    if ($pattern)
-    {
+    if ($pattern) {
         $pattern = [regex]::Escape($pattern)
     }
     $history = [System.Collections.ArrayList]@(
         $last = ''
         $lines = ''
-        foreach ($line in [System.IO.File]::ReadLines((Get-PSReadlineOption).HistorySavePath))
-        {
-            if ($line.EndsWith('`'))
-            {
+        foreach ($line in [System.IO.File]::ReadLines((Get-PSReadlineOption).HistorySavePath)) {
+            if ($line.EndsWith('`')) {
                 $line = $line.Substring(0, $line.Length - 1)
-                $lines = if ($lines)
-                {
+                $lines = if ($lines) {
                     "$lines`n$line"
-                }
-                else
-                {
+                } else {
                     $line
                 }
                 continue
             }
-            if ($lines)
-            {
+            if ($lines) {
                 $line = "$lines`n$line"
                 $lines = ''
             }
-            if (($line -cne $last) -and (!$pattern -or ($line -match $pattern)))
-            {
+            if (($line -cne $last) -and (!$pattern -or ($line -match $pattern))) {
                 $last = $line
                 $line
             }
@@ -38,11 +30,30 @@ Set-PSReadlineKeyHandler -Key F7 -BriefDescription HistoryList -Description "Sho
     )
     $history.Reverse()
     $command = $history | Select-Object -unique | Out-GridView -Title "PSReadline History - Select a command to insert at the prompt" -OutputMode Single
-    if ($command)
-    {
+    if ($command) {
         [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert(($command -join "`n"))
     }
+}
+
+# Credits
+# https://www.sharepointdiary.com/2020/04/powershell-generate-random-password.html
+Function Get-RandomPassword {
+    #define parameters
+    param([Parameter(ValueFromPipeline=$false)][ValidateRange(1,256)][int]$PasswordLength = 10)
+ 
+    #ASCII Character set for Password
+    $CharacterSet = @{
+            Lowercase   = (97..122) | Get-Random -Count 10 | % {[char]$_}
+            Uppercase   = (65..90)  | Get-Random -Count 10 | % {[char]$_}
+            Numeric     = (48..57)  | Get-Random -Count 10 | % {[char]$_}
+            SpecialChar = (33..47)+(58..64)+(91..96)+(123..126) | Get-Random -Count 10 | % {[char]$_}
+    }
+ 
+    #Frame Random Password from given character set
+    $StringSet = $CharacterSet.Uppercase + $CharacterSet.Lowercase + $CharacterSet.Numeric + $CharacterSet.SpecialChar
+ 
+    -join(Get-Random -Count $PasswordLength -InputObject $StringSet)
 }
 
 # Credits
@@ -62,4 +73,5 @@ function User-CloseAllPSSessions {
 
 # EXPORT MODULES ===================================================================================================================================================
 
+Export-ModuleMember -Function "Get-RandomPassword"
 Export-ModuleMember -Function "User-CloseAllPSSessions"
