@@ -255,14 +255,23 @@ function Get-UserGroups {
     $groupList=@()
 
     if ( $UserPrincipalName -inotmatch "@" ) {
-      $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
-      Write-Host "Complete e-mail address not specified, user found: $($UserPrincipalName)" -f "Cyan"
+      $emailAddresses = (Get-Recipient $UserPrincipalName).EmailAddresses | Where-Object { $_ -clike 'SMTP:*' }
+      if ($emailAddresses.Count -gt 1) {
+        Write-Host "Complete e-mail address not specified, multiple email addresses found:" -f "Cyan"
+        $emailAddresses | ForEach-Object { Write-Host $_.Replace('SMTP:', ' ') }
+        Write-Host "Run the command again but specify the full address to perform a more accurate search." -f "Cyan"
+        $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress | Select-Object -First 1
+        Write-Host "First user selected: $($UserPrincipalName)" -f "Cyan"
+      } else {
+        $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
+        Write-Host "Complete e-mail address not specified, user found: $($UserPrincipalName)" -f "Cyan"
+      }
     }
 
     try {
       $RecipientType = (Get-Recipient $UserPrincipalName -ErrorAction SilentlyContinue).RecipientTypeDetails
 
-      if ( $RecipientType ) {
+      if ( $RecipientType -ne $null ) {
         Switch ($RecipientType) {
           "MailContact" { 
             # If you need to analyze a MailContact you must change query in Get-MgContact instead of Get-MgUser / Get-MgContactMemberOf
@@ -271,9 +280,12 @@ function Get-UserGroups {
             $groups = Get-MgContactMemberOf -OrgContactId $userID.Id | Select-Object *
           }
           "UserMailbox" {
-            # $userID = Get-MgUser -UserId $UserPrincipalName
             $userID = Get-MgUser -UserId (Get-Recipient $UserPrincipalName).WindowsLiveID
             $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
+          }
+          "MailUniversalDistributionGroup" {
+            $userID = Get-MgGroup -Filter "Mail eq '$UserPrincipalName'"
+            $groups = Get-MgGroupMemberOf -GroupId $userID.Id | Select-Object *
           }
           Default {
             # If the mailbox is not a "UserMailbox" or a "MailContact" (for example a "SharedMailbox"), then the UPN is the WindowsLiveID value.
@@ -286,7 +298,7 @@ function Get-UserGroups {
         Write-Host "Recipient not available or not found." -f "Red"
       }
 
-      if ( $groups ) {
+      if ( $groups -ne $null ) {
         $groups | ForEach {
           $groupIDs = $_.id
           $otherproperties = $_.AdditionalProperties
