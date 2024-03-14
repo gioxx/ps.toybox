@@ -59,19 +59,19 @@ function Add-MboxPermission {
         Switch ($AccessRights) {
           "FullAccess" {
             if ($AutoMapping) {
-              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+              Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) ..."
               Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Host
             } else {
-              Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) without AutoMapping ..."
+              Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) without AutoMapping ..."
               Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Host
             }
           }
           "SendAs" {
-            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+            Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
             Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
           }
           "SendOnBehalfTo" {
-            Write-Host "Add $($CurrentUser) ($($AccessRights)) on $($SourceMailbox) ..."
+            Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
             Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{add="$($CurrentUser)"} -Confirm:$False | Out-Host
           }
           "All" {
