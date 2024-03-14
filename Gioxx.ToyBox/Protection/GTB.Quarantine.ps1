@@ -108,23 +108,15 @@ function Get-QuarantineToRelease {
       [ValidateNotNullOrEmpty()]
       [int]$Interval,
       [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Show results in a grid view")]
-      [switch] $GridView
+      [switch] $GridView,
+      [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Export results in a CSV file")]
+      [switch] $CSV
   )
 
   if ($PSCmdlet.ParameterSetName -eq 'CalendarSetOptions' -and !$ChooseDayFromCalendar) {
       Write-Error "Number of days to be analyzed from today (maximum 30) is a mandatory value (or you must use -ChooseDayFromCalendar)."
       return
   }
-
-  # param(
-  #   [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Number of days to be analyzed from today (maximum 30)")]
-  #   [ValidateNotNullOrEmpty()]
-  #   [int]$Interval,
-  #   [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Choose interval selecting start date and end date from calendar")]
-  #   [switch] $ChooseDayFromCalendar,
-  #   [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Show results in a grid view")]
-  #   [switch] $GridView
-  # )
 
   Set-Variable ProgressPreference Continue
 
@@ -271,52 +263,63 @@ function Get-QuarantineToRelease {
           if ( $release_or_delete -eq 1 ) {
             # DELETE QUARANTINED EMAILS SELECTED
             $decision = priv_TakeDecisionOptions "Do you really want to permanently delete $($ReleaseQuarantine.Count) selected items?" "&Yes" "&No" "Delete message(s)." "Do not delete message(s)."
-            $ReleaseQuarantine | ForEach {
-              if ($decision -eq 0) {
-                $QuarantinedMessageToDelete = Get-QuarantineMessage -Identity $_.Identity
+
+            if ($decision -eq 0) {
+              $ReleaseQuarantine | ForEach {
+                $QuarantinedMessageToDelete = $_
+                # $QuarantinedMessageToDelete = Get-QuarantineMessage -Identity $_.Identity
                 
                 $ProcessedCount++
                 $PercentComplete = ( ($ProcessedCount / $ReleaseQuarantine.Count) * 100 )
                 Write-Progress -Activity "Deleting $(priv_MaxLenghtSubString $QuarantinedMessageToDelete.Subject $MaxFieldLength)" -Status "$ProcessedCount out of $($ReleaseQuarantine.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
-                $QuarantinedMessageToDelete | Delete-QuarantineMessage -Confirm:$false
+                # $QuarantinedMessageToDelete | Delete-QuarantineMessage -Confirm:$false
+                Delete-QuarantineMessage -Identity $QuarantinedMessageToDelete.Identity -Confirm:$false
               }
+              Write-Host "`nDone.`n" -f "Green"
             }
-            Write-Host "`nDone.`n" -f "Green"
+
+
           } else {
             # RELEASE QUARANTINED EMAILS SELECTED
             $decision = priv_TakeDecisionOptions "Do you really want to release $($ReleaseQuarantine.Count) selected items?" "&Yes" "&No" "Release messages." "Do not release messages."
             $reportFalsePositive = priv_TakeDecisionOptions "Do you want to report false positive to Microsoft?" "&Yes" "&No" "Report false positive message to Microsoft." "Do not report false positive message to Microsoft." 1
 
-            $ReleaseQuarantine | ForEach {
-              if ( $decision -eq 0 ) {
-                if ( $reportFalsePositive -eq 0 ) {
-                  Release-QuarantineMessage -Identity $_.Identity -ReleaseToAll -ReportFalsePositive -Confirm:$false
-                } else { 
-                  Release-QuarantineMessage -Identity $_.Identity -ReleaseToAll -Confirm:$false
-                }
-                
-                $QuarantinedMessageReleased = Get-QuarantineMessage -Identity $_.Identity
-                
+            if ( $decision -eq 0 ) {
+              $ReleaseQuarantine | ForEach {                
+                $QuarantinedMessageToRelease = $_
+                # $QuarantinedMessageToRelease = Get-QuarantineMessage -Identity $_.Identity
+
                 $ProcessedCount++
                 $PercentComplete = (($ProcessedCount / $ReleaseQuarantine.Count) * 100)
-                Write-Progress -Activity "Processing $(priv_MaxLenghtSubString $QuarantinedMessageReleased.Subject $MaxFieldLength)" -Status "$ProcessedCount out of $($ReleaseQuarantine.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+                Write-Progress -Activity "Processing $(priv_MaxLenghtSubString $QuarantinedMessageToRelease.Subject $MaxFieldLength)" -Status "$ProcessedCount out of $($ReleaseQuarantine.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+
+                if ( $reportFalsePositive -eq 0 ) {
+                  Release-QuarantineMessage -Identity $QuarantinedMessageToRelease.Identity -ReleaseToAll -ReportFalsePositive -Confirm:$false
+                } else { 
+                  Release-QuarantineMessage -Identity $QuarantinedMessageToRelease.Identity -ReleaseToAll -Confirm:$false
+                }
                 
                 $ReleaseQuarantineReleased += New-Object -TypeName PSObject -Property $([ordered]@{
-                  Subject = priv_MaxLenghtSubString $QuarantinedMessageReleased.Subject $MaxFieldLength
-                  SenderAddress = priv_MaxLenghtSubString $QuarantinedMessageReleased.SenderAddress $MaxFieldLength
-                  Released = $QuarantinedMessageReleased.Released
-                  ReleasedUser = $QuarantinedMessageReleased.ReleasedUser
+                  Subject = priv_MaxLenghtSubString $QuarantinedMessageToRelease.Subject $MaxFieldLength
+                  SenderAddress = priv_MaxLenghtSubString $QuarantinedMessageToRelease.SenderAddress $MaxFieldLength
+                  # Released = $QuarantinedMessageToRelease.Released
+                  # ReleasedUser = $QuarantinedMessageToRelease.ReleasedUser
                 })
               }
+
+              Write-Host "Done, please take a look below." -f "Green"
+              $ReleaseQuarantineReleased | Select-Object Subject,SenderAddress,Released,ReleasedUser | Sort-Object Subject | Out-Host
             }
-            Write-Host "Done, please take a look below." -f "Green"
-            $ReleaseQuarantineReleased | Sort-Object Subject | Select-Object Subject,SenderAddress,Released,ReleasedUser | Out-Host
           }
         }
       }
+    } elseif ( $CSV ) {
+      $folder = priv_CheckFolder($folderCSV)
+      $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-QuarantineToRelease-Report.csv")
+      $arr_QuarantineToRelease | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
     } else {
-      $arr_QuarantineToRelease | Sort-Object Subject | Select-Object SenderAddress,RecipientAddress,Subject,QuarantineTypes,Released
+      $arr_QuarantineToRelease | Select-Object SenderAddress,RecipientAddress,Subject,QuarantineTypes,Released | Sort-Object Subject
     }
 
   } else {
