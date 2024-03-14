@@ -49,6 +49,7 @@
     "Get-QuarantineFrom",
     "Get-QuarantineFromDomain",
     "Get-QuarantineToRelease",
+    "Get-RandomPassword",
     "Get-RoomsDetails",
     "Get-UserGroups",
     "New-SharedMailbox",
@@ -79,7 +80,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = '24-01-11(1)'
+      Prerelease = '240311(2)'
       RequireLicenseAcceptance = $False
 
     }
