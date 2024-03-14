@@ -1,6 +1,6 @@
 # Protection =======================================================================================================================================================
 
-function Export-MFAStatus {
+function DECOMMISSIONING_Export-MFAStatus {
   # Credits:
   #   https://activedirectorypro.com/mfa-status-powershell
   #   https://lazyadmin.nl
@@ -161,7 +161,58 @@ function Export-MFAStatus {
   }
 }
 
-function Export-MFAStatusDefaultMethod {
+function Export-MFAStatus {
+  # Credits:
+  #   https://www.alitajran.com/get-mfa-status-entra/
+  param(
+    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")]
+    [string] $folderCSV
+  )
+  
+  Set-Variable ProgressPreference Continue
+  $folder = priv_CheckFolder($folderCSV)
+  $mggConnectedCheck = priv_CheckMGGraphModule
+  
+  if ( $mggConnectedCheck -eq $true ) {
+    try {
+      Connect-MgGraph -Scopes "Reports.Read.All,AuditLog.Read.All"
+      # Fetch user registration detail report from Microsoft Graph
+      $Users = Get-MgReportAuthenticationMethodUserRegistrationDetail
+
+      # Create custom PowerShell object and populate it with the desired properties
+      $Report = foreach ($User in $Users) {
+        [pscustomobject]@{
+            Id                                           = $User.Id
+            UserPrincipalName                            = $User.UserPrincipalName
+            UserDisplayName                              = $User.UserDisplayName
+            IsAdmin                                      = $User.IsAdmin
+            DefaultMfaMethod                             = $User.DefaultMfaMethod
+            MethodsRegistered                            = $User.MethodsRegistered -join ','
+            IsMfaCapable                                 = $User.IsMfaCapable
+            IsMfaRegistered                              = $User.IsMfaRegistered
+            IsPasswordlessCapable                        = $User.IsPasswordlessCapable
+            IsSsprCapable                                = $User.IsSsprCapable
+            IsSsprEnabled                                = $User.IsSsprEnabled
+            IsSsprRegistered                             = $User.IsSsprRegistered
+            IsSystemPreferredAuthenticationMethodEnabled = $User.IsSystemPreferredAuthenticationMethodEnabled
+            LastUpdatedDateTime                          = $User.LastUpdatedDateTime
+        }
+      }
+      
+      $CSV = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-MFA-Status-Report.csv")
+      $Report | Out-GridView -Title "Authentication Methods Report"
+      $Report | Export-Csv -Path $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+
+      Write-Host "Report exported successfully to $($CSV)" -f "Green"
+    } catch {
+      Write-Host "`nAn error occurred: $_" -f "Red"
+    }
+  } else {
+    Write-Host "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs." -f "Red"
+  }
+}
+
+function DECOMMISSIONING_Export-MFAStatusDefaultMethod {
   # Credits: https://thesysadminchannel.com/get-per-user-mfa-status-using-powershell
   param(
     [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")]
@@ -383,7 +434,6 @@ function User-SignOut {
 # Export Modules ===================================================================================================================================================
 
 Export-ModuleMember -Function "Export-MFAStatus"
-#Export-ModuleMember -Function "Export-MFAStatusDefaultMethod"
 Export-ModuleMember -Function "User-DisableDevices"
 Export-ModuleMember -Function "User-DisableSignIn"
 Export-ModuleMember -Function "User-SignOut"
