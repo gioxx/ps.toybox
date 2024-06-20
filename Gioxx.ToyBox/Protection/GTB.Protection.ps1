@@ -161,6 +161,40 @@ function DECOMMISSIONING_Export-MFAStatus {
   }
 }
 
+function Change-MFAStatus {
+  # Credits:
+  #   https://technet440.rssing.com/chan-6827930/article18082.html
+  Param(
+    [Parameter(Position=0, Mandatory=$true, ValueFromPipeline=$true, HelpMessage="User principal name (es. mario.rossi@contoso.com)")]
+    [string] $UserPrincipalName
+  )
+
+  $previousInformationPreference = $InformationPreference
+  Set-Variable InformationPreference Continue
+
+  $msolServiceConnectedCheck = priv_CheckMsolEmbeddedService
+  if ( $msolServiceConnectedCheck -eq $true ) {
+    
+    $authMFA = New-Object -TypeName Microsoft.Online.Administration.StrongAuthenticationRequirement
+    $authMFA.RelyingParty = "*"
+    $authMFA.State = "Enabled"
+    $authMFA.RememberDevicesNotIssuedBefore = (Get-Date)
+
+    if ( -not (Get-MsolUser -UserPrincipalName $UserPrincipalName | Select -ExpandProperty StrongAuthenticationRequirements ) ) {
+      Write-InformationColored "No StrongAuthenticationRequirements found. `nSetting new StrongAuthenticationRequirements." -ForegroundColor "Yellow"
+      Set-MsolUser -UserPrincipalName $UserPrincipalName -StrongAuthenticationRequirements $authMFA
+    } else {
+      Write-InformationColored "StrongAuthenticationRequirements already enabled. `nDisabling it." -ForegroundColor "Cyan"
+      Set-MsolUser -UserPrincipalName $UserPrincipalName -StrongAuthenticationRequirements @()
+    }
+
+  } else {
+    Write-Error "`nCan't connect or use MsolService using Windows PowerShell. `nPlease check logs."
+  }
+
+  Set-Variable InformationPreference $previousInformationPreference
+}
+
 function Export-MFAStatus {
   # Credits:
   #   https://www.alitajran.com/get-mfa-status-entra/
@@ -169,7 +203,11 @@ function Export-MFAStatus {
     [string] $folderCSV
   )
   
+  $previousInformationPreference = $InformationPreference
+  Set-Variable InformationPreference Continue
+  $previousProgressPreference = $ProgressPreference
   Set-Variable ProgressPreference Continue
+  
   $folder = priv_CheckFolder($folderCSV)
   $mggConnectedCheck = priv_CheckMGGraphModule
   
@@ -203,13 +241,16 @@ function Export-MFAStatus {
       $Report | Out-GridView -Title "Authentication Methods Report"
       $Report | Export-Csv -Path $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 
-      Write-Host "Report exported successfully to $($CSV)" -f "Green"
+      Write-InformationColored "Report exported successfully to $($CSV)" -ForegroundColor "Green"
     } catch {
-      Write-Host "`nAn error occurred: $_" -f "Red"
+      Write-Error "`nAn error occurred: $_"
     }
   } else {
-    Write-Host "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs."
   }
+
+  Set-Variable InformationPreference $previousInformationPreference
+  Set-Variable ProgressPreference $previousProgressPreference
 }
 
 function DECOMMISSIONING_Export-MFAStatusDefaultMethod {
@@ -431,8 +472,10 @@ function User-SignOut {
 
 }
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
+Export-ModuleMember -Function "Change-MFAStatus"
 Export-ModuleMember -Function "Export-MFAStatus"
 Export-ModuleMember -Function "User-DisableDevices"
 Export-ModuleMember -Function "User-DisableSignIn"

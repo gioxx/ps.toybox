@@ -10,11 +10,12 @@
     ".\Mailboxes\GTB.Mboxes.ps1",
     '.\Main\GTB.Connections.ps1',
     '.\Main\GTB.Tools.ps1',
-    '.\Main\GTB.Xtras.ps1',
     ".\Protection\GTB.Protection.ps1",
     ".\Protection\GTB.Quarantine.ps1",
     ".\Rooms\GTB.Room.ps1",
-    ".\Statistics\GTB.Stats.ps1"
+    ".\Statistics\GTB.Stats.ps1",
+    '.\Xtras\GTB.Custom.ps1',
+    '.\Xtras\Write-InformationColored.ps1'
   )
 
   ModuleVersion = '0.5'
@@ -32,6 +33,8 @@
     "Add-MboxAlias",
     "Add-MboxPermission",
     "Change-MboxLanguage",
+    "Change-MFAStatus",
+    "Clone-OoOMessage",
     "Connect-EOL",
     "Connect-MSOnline",
     "Export-CalendarPermission",
@@ -70,7 +73,9 @@
   CmdletsToExport = @()
 
   VariablesToExport = '*' # Variables to export from this module
-  AliasesToExport = @() # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
+  AliasesToExport = @(
+    "rqf"
+  ) # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 
   PrivateData = @{
     PSData = @{
@@ -80,7 +85,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = '240311(2)'
+      Prerelease = '20240614(1)'
       RequireLicenseAcceptance = $False
 
     }

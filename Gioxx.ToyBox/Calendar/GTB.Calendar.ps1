@@ -1,5 +1,28 @@
 # Calendar =========================================================================================================================================================
 
+function Clone-OoOMessage {
+  param(
+    [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Mailbox from which to copy OoO messages (e.g. source@contoso.com)")]
+    [string] $SourceMailbox,
+    [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Mailbox on which to write copied OoO messages (e.g. destination@contoso.com)")]
+    [string] $DestinationMailbox
+  )
+
+  $eolConnectedCheck = priv_CheckEOLConnection
+  
+  if ( $eolConnectedCheck -eq $true ) {
+    $externalMessage = (Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox).ExternalMessage
+    $internalMessage = (Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox).InternalMessage
+
+    Set-MailboxAutoReplyConfiguration -Identity $DestinationMailbox -AutoReplyState "Enabled" -InternalMessage $internalMessage -ExternalMessage $externalMessage
+    Get-MailboxAutoReplyConfiguration -Identity $DestinationMailbox | Select-Object -Property AutoReplyState,InternalMessage,ExternalMessage
+
+  } else {
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
+  }
+
+}
+
 function Export-CalendarPermission {
   param(
     [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Mailbox to analyze (e.g. info@contoso.com)")]
@@ -11,15 +34,16 @@ function Export-CalendarPermission {
   )
 
   begin {
+    $previousProgressPreference = $ProgressPreference
+    Set-Variable ProgressPreference Continue
+    
     $mboxCounter = 0
     $arr_CalPerm = @()
     $eolConnectedCheck = priv_CheckEOLConnection
 
     if ( $eolConnectedCheck -eq $true ) {
-      Set-Variable ProgressPreference Continue
-
       if ([string]::IsNullOrEmpty($SourceMailbox)) {
-        Write-Host "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient." -f "Yellow"
+        Write-Warning "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient."
         $All = $True
       }
 
@@ -27,7 +51,7 @@ function Export-CalendarPermission {
         $SourceMailbox = Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue
       }
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
       Return
     }
   }
@@ -61,6 +85,8 @@ function Export-CalendarPermission {
     } else {
       $arr_CalPerm | Out-Host
     }
+
+    Set-Variable ProgressPreference $previousProgressPreference
   }
 }
 
@@ -162,13 +188,15 @@ function Set-OoO {
     Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 
 }
 
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
+Export-ModuleMember -Function "Clone-OoOMessage"
 Export-ModuleMember -Function "Export-CalendarPermission"
 Export-ModuleMember -Function "Set-OoO"

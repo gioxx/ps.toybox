@@ -76,7 +76,7 @@ function Export-DG {
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -156,7 +156,7 @@ function Export-DDG {
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -236,7 +236,7 @@ function Export-M365Group {
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -249,28 +249,34 @@ function Get-UserGroups {
     [switch] $GridView
   )
 
+  $groupList=@()
   $mggConnectedCheck = priv_CheckMGGraphModule
 
   if ( $mggConnectedCheck -eq $true ) {
-    $groupList=@()
-
     if ( $UserPrincipalName -inotmatch "@" ) {
-      $emailAddresses = (Get-Recipient $UserPrincipalName).EmailAddresses | Where-Object { $_ -clike 'SMTP:*' }
-      if ($emailAddresses.Count -gt 1) {
-        Write-Host "Complete e-mail address not specified, multiple email addresses found:" -f "Cyan"
-        $emailAddresses | ForEach-Object { Write-Host $_.Replace('SMTP:', ' ') }
-        Write-Host "Run the command again but specify the full address to perform a more accurate search." -f "Cyan"
-        $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress | Select-Object -First 1
-        Write-Host "First user selected: $($UserPrincipalName)" -f "Cyan"
-      } else {
-        $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
-        Write-Host "Complete e-mail address not specified, user found: $($UserPrincipalName)" -f "Cyan"
+      try {
+        $emailAddresses = (Get-Recipient $UserPrincipalName).EmailAddresses | Where-Object { $_ -clike 'SMTP:*' }
+        if ($emailAddresses.Count -le 0) {
+          Write-Host "Recipient not available or not found ($($UserPrincipalName))." -f "Red"
+          break
+        } elseif ($emailAddresses.Count -gt 1) {
+          Write-Host "Complete e-mail address not specified, multiple email addresses found:" -f "Cyan"
+          $emailAddresses | ForEach-Object { Write-Host $_.Replace('SMTP:', ' ') }
+          Write-Host "Run the command again but specify the full address to perform a more accurate search." -f "Cyan"
+          $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress | Select-Object -First 1
+          Write-Host "First user selected: $($UserPrincipalName)" -f "Cyan"
+        } else {
+          $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
+          Write-Host "Complete e-mail address not specified, user found: $($UserPrincipalName)" -f "Cyan"
+        }
+      } catch {
+        Write-Error $_.Exception.Message
       }
     }
-
+    
     try {
       $RecipientType = (Get-Recipient $UserPrincipalName -ErrorAction SilentlyContinue).RecipientTypeDetails
-
+      
       if ( $RecipientType -ne $null ) {
         Switch ($RecipientType) {
           "MailContact" { 
@@ -294,48 +300,56 @@ function Get-UserGroups {
             $groups = Get-MgUserMemberOf -UserId $userID.Id | Select-Object *
           }
         }
-      } else {
-        Write-Host "Recipient not available or not found." -f "Red"
-      }
 
-      if ( $groups -ne $null ) {
-        $groups | ForEach {
-          $groupIDs = $_.id
-          $otherproperties = $_.AdditionalProperties
+        if ( $groups -ne $null ) {
+          $groups | ForEach {
+            $groupIDs = $_.id
+            $otherproperties = $_.AdditionalProperties
 
-          if ($GridView) {
-            $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
-              "Group Name" = $otherproperties.displayName
-              "Group Description" = $otherproperties.description
-              "Group Mail" = $otherproperties.mail
-              "Group Mail Nickname" = $otherproperties.mailNickname
-              "Group Mail Enabled" = $otherproperties.mailEnabled
-              "Group ID" = $groupIDs
-            })
-          } else {
-            $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
-              "Group Name" = $otherproperties.displayName
-              "Group Mail" = $otherproperties.mail
-            })
+            if (($otherproperties.groupTypes).count -eq 0) { 
+              $groupType = (Get-Recipient $otherproperties.mail).RecipientTypeDetails
+            } else { 
+              $groupType = $otherproperties.groupTypes
+            }
+
+            if ($GridView) {
+              $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
+                "Group Name" = $otherproperties.displayName
+                "Group Description" = $otherproperties.description
+                "Group Mail" = $otherproperties.mail
+                "Group Mail Nickname" = $otherproperties.mailNickname
+                "Group Mail Enabled" = $otherproperties.mailEnabled
+                "Group Type" = $groupType
+                "Group ID" = $groupIDs
+              })
+            } else {
+              $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
+                "Group Name" = $otherproperties.displayName
+                "Group Mail" = $otherproperties.mail
+                "Group Type" = $groupType
+              })
+            }
+            
           }
           
+          if ($GridView) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList | Sort "Group Name" | Out-Host }
         }
-        
-        if ($GridView) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList }
+
+      } else {
+        Write-Host "Recipient not available or not found ($($UserPrincipalName))." -f "Red"
       }
-
     } catch {
-      Write-Host "Recipient not available or not found." -f "Red"
-      # Write-Host "Error details: $_"
+      Write-Error $_.Exception.Message
     }
-
+  
   } else {
     Write-Host "`nCan't connect or use Microsoft Graph modules. `nPlease check logs." -f "Red"
   }
 }
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Export-DG"
 Export-ModuleMember -Function "Export-DDG"
 Export-ModuleMember -Function "Export-M365Group"

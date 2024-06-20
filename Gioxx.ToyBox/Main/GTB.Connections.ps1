@@ -24,7 +24,8 @@ function Connect-MSOnline {
   }
 }
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Connect-EOL"
 Export-ModuleMember -Function "Connect-MSOnline"

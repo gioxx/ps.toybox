@@ -48,11 +48,12 @@ function Get-RoomsDetails {
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Get-RoomsDetails"

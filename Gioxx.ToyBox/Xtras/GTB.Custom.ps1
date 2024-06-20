@@ -71,7 +71,8 @@ function User-CloseAllPSSessions {
     Disconnect-ExchangeOnline -Confirm:$false
 }
 
-# EXPORT MODULES ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Get-RandomPassword"
 Export-ModuleMember -Function "User-CloseAllPSSessions"

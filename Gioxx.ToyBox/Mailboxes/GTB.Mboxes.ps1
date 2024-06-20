@@ -15,22 +15,23 @@ function Add-MboxAlias {
     try {
       $GRRTD = (Get-Recipient $SourceMailbox -ErrorAction Stop).RecipientTypeDetails
     } catch {
-      Write-Host "`nUsage: Add-MboxAlias -SourceMailbox mailbox@contoso.com -MailboxAlias alias@contoso.com`n" -f "Yellow"
+      Write-Warning "`nUsage: Add-MboxAlias -SourceMailbox mailbox@contoso.com -MailboxAlias alias@contoso.com`n"
       Write-Error $_.Exception.Message
     }
 
     Switch ($GRRTD) {
       "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
       "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
+      { ($_ -eq "MailUniversalDistributionGroup") -or ($_ -eq "DynamicDistributionGroup") -or ($_ -eq "MailUniversalSecurityGroup") } {
+        Set-DistributionGroup $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"}
+      }
       Default { Set-Mailbox $SourceMailbox -EmailAddresses @{add="$($MailboxAlias)"} }
     }
 
-    Get-Recipient $SourceMailbox | 
-        Select-Object Name -Expand EmailAddresses | 
-        Where {$_ -like 'smtp*'}
+    Get-MboxAlias -SourceMailbox $SourceMailbox
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -48,10 +49,14 @@ function Add-MboxPermission {
 
   begin {
     if ([string]::IsNullOrEmpty($AccessRights)) { $AccessRights = "All" }
+    $previousInformationPreference = $InformationPreference
+    Set-Variable InformationPreference Continue
   }
 
   process {
     $eolConnectedCheck = priv_CheckEOLConnection
+    $SourceMailbox = $SourceMailbox.ToLower()
+    $UserMailbox = $UserMailbox.ToLower()
     
     if ( $eolConnectedCheck -eq $true ) {
       $UserMailbox | ForEach {
@@ -59,40 +64,42 @@ function Add-MboxPermission {
         Switch ($AccessRights) {
           "FullAccess" {
             if ($AutoMapping) {
-              Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) ..."
+              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) ..."
               Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Host
             } else {
-              Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) without AutoMapping ..."
+              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) without AutoMapping ..."
               Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Host
             }
           }
           "SendAs" {
-            Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
+            Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
             Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
           }
           "SendOnBehalfTo" {
-            Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
+            Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
             Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{add="$($CurrentUser)"} -Confirm:$False | Out-Host
           }
           "All" {
             if ($AutoMapping) {
-              Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) ..."
+              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) ..."
               Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Host
-              Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
+              Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
               Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
             }
             else {
-              Write-Host "Add $($CurrentUser) (FullAccess) on $($SourceMailbox) without AutoMapping ..."
+              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) without AutoMapping ..."
               Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Host
-              Write-Host "Add $($CurrentUser) (SendAs) on $($SourceMailbox) ..."
+              Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
               Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
             }
           }
         }
       }
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
+
+    Set-Variable InformationPreference $previousInformationPreference
   }
 }
 
@@ -127,7 +134,7 @@ function Change-MboxLanguage {
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -148,8 +155,9 @@ function Export-MboxAlias {
   begin {
     $mboxCounter = 0
     $arr_MboxAliases = @()
-    Set-Variable ProgressPreference Continue
     $eolConnectedCheck = priv_CheckEOLConnection
+    $previousProgressPreference = $ProgressPreference
+    Set-Variable ProgressPreference Continue
     
     if ( $eolConnectedCheck -eq $true ) {
 
@@ -164,7 +172,7 @@ function Export-MboxAlias {
       }
 
       if ($All) {
-        Write-Host "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient." -f "Yellow"
+        Write-Warning "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient."
         $SourceMailbox = Get-Recipient -ResultSize Unlimited | 
             Where { $_.RecipientTypeDetails -ne "GuestMailUser" }
         $CSV = $True
@@ -174,7 +182,7 @@ function Export-MboxAlias {
       if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
     
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
       Return
     }
   }
@@ -218,6 +226,8 @@ function Export-MboxAlias {
     } else {
       $arr_MboxAliases | Out-Host
     }
+
+    Set-Variable ProgressPreference $previousProgressPreference
   }
 }
 
@@ -279,7 +289,7 @@ function Export-MboxPermission {
     $arr_MboxPerms | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
   
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 
   # $WarningPreference = $warningPrefBackup
@@ -313,11 +323,11 @@ function Get-MboxAlias {
       $arr_Alias | ft -HideTableHeaders | Out-Host
 
     } else {
-      Write-Host "Recipient not available or not found." -f "Red"
+      Write-Error "Recipient not available or not found."
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -392,7 +402,7 @@ function Get-MboxPermission {
     $arr_MbxPerms | Out-Host
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -415,7 +425,7 @@ function New-SharedMailbox {
     Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSendOnBehalfEnabled $True
     Write-Host "All done, remember to set access and editing rights to the new mailbox."
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -431,18 +441,27 @@ function Remove-MboxAlias {
 
   if ( $eolConnectedCheck -eq $true ) {
 
-    Switch ($(Get-Recipient $SourceMailbox).RecipientTypeDetails) {
+    try {
+      $GRRTD = (Get-Recipient $SourceMailbox -ErrorAction Stop).RecipientTypeDetails
+    } catch {
+      Write-Warning "`nUsage: Remove-MboxAlias -SourceMailbox mailbox@contoso.com -MailboxAlias alias@contoso.com`n"
+      Write-Error $_.Exception.Message
+    }
+
+    Switch ($GRRTD) {
       "MailContact" { Set-MailContact $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
       "MailUser" { Set-MailUser $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
+      { ($_ -eq "MailUniversalDistributionGroup") -or ($_ -eq "DynamicDistributionGroup") -or ($_ -eq "MailUniversalSecurityGroup") } {
+        # Credits: https://stackoverflow.com/a/3493826/2220346
+        Set-DistributionGroup $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"}
+      }
       Default { Set-Mailbox $SourceMailbox -EmailAddresses @{remove="$($MailboxAlias)"} }
     }
-    
-    Get-Recipient $SourceMailbox | 
-        Select-Object Name -Expand EmailAddresses | 
-        Where {$_ -like 'smtp*'}
+
+    Get-MboxAlias -SourceMailbox $SourceMailbox
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -457,11 +476,15 @@ function Remove-MboxPermission {
   )
 
   begin {
+    $previousInformationPreference = $InformationPreference
+    Set-Variable InformationPreference Continue
     if ([string]::IsNullOrEmpty($AccessRights)) { $AccessRights = "All" }
   }
 
   process {
     $eolConnectedCheck = priv_CheckEOLConnection
+    $SourceMailbox = $SourceMailbox.ToLower()
+    $UserMailbox = $UserMailbox.ToLower()
     
     if ( $eolConnectedCheck -eq $true ) {
       $UserMailbox | ForEach {
@@ -479,8 +502,10 @@ function Remove-MboxPermission {
       }
 
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
+
+    Set-Variable InformationPreference $previousInformationPreference
   }
 }
 
@@ -493,6 +518,7 @@ function Set-MboxRulesQuota {
   begin {
     $mboxCounter = 0
     $arr_MboxRulesQuota = @()
+    $previousProgressPreference = $ProgressPreference
     Set-Variable ProgressPreference Continue
   }
 
@@ -523,8 +549,10 @@ function Set-MboxRulesQuota {
       $arr_MboxRulesQuota | Out-Host
 
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
+
+    Set-Variable ProgressPreference $previousProgressPreference
   }
 }
 
@@ -539,6 +567,7 @@ function Set-SharedMboxCopyForSent {
     $mboxCounter = 0
     $arr_SharedMboxCFS = @()
     $arr_SharedMboxCFSError = @()
+    $previousProgressPreference = $ProgressPreference
     Set-Variable ProgressPreference Continue
   }
 
@@ -574,14 +603,17 @@ function Set-SharedMboxCopyForSent {
       $arr_SharedMboxCFSError | Out-Host
 
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
+
+    Set-Variable ProgressPreference $previousProgressPreference
   }
 }
 
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Add-MboxAlias"
 Export-ModuleMember -Function "Add-MboxPermission"
 Export-ModuleMember -Function "Change-MboxLanguage"

@@ -74,7 +74,7 @@ function Export-MboxStatistics {
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -127,7 +127,8 @@ function Export-MsolAccountSku {
   
 }
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Export-MboxStatistics"
 Export-ModuleMember -Function "Export-MsolAccountSku"

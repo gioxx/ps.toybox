@@ -45,6 +45,27 @@ function priv_CheckEOLConnection {
     return $eolConnected
 }
 
+function priv_CheckMsolEmbeddedService {
+    $msolServiceConnected = $false
+    
+    if ( (Get-Module -Name MSOnline -ListAvailable).count -gt 0 ) {
+        try {
+            # Get-MsolDomain -DomainName "contoso.onmicrosoft.com" -ErrorAction Stop > $null
+            (Get-MsolDomain -ErrorAction Stop)[1]
+            $msolServiceConnected = $true
+        } catch {
+            Import-Module MSOnline -UseWindowsPowershell
+            Connect-MSolService
+            $msolServiceConnected = $true
+        }
+    } else {
+        Write-Error "MSOnline module is not available on the system."
+        Write-InformationColored "Please use embedded Windows PowerShell and execute this command: `nInstall-Module MSOnline" -ForegroundColor "Yellow"
+    }
+
+    return $msolServiceConnected
+}
+
 function priv_CheckFolder($path) {
     if ([string]::IsNullOrEmpty($path)) {
         $path = $PWD

@@ -38,11 +38,11 @@ function Export-QuarantineEML {
         Get-QuarantineMessage -MessageId $($messageID) | Release-QuarantineMessage -ReleaseToAll
       }
     } else {
-      Write-Host "Message not released (aborted by user)." -f "Yellow"
+      Write-Warning "Message not released (aborted by user)."
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 }
 
@@ -67,7 +67,7 @@ function Get-QuarantineFrom {
         }
       }
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
   }
 }
@@ -93,13 +93,12 @@ function Get-QuarantineFromDomain {
         }
       }
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
   }
 }
 
 function Get-QuarantineToRelease {
-
   [CmdletBinding(DefaultParameterSetName='CalendarSetOptions')]
   param (
       [Parameter(Mandatory=$false, ParameterSetName='CalendarSetOptions', ValueFromPipeline=$True, HelpMessage="Choose a single day from calendar")]
@@ -118,7 +117,10 @@ function Get-QuarantineToRelease {
       return
   }
 
+  $previousProgressPreference = $ProgressPreference
   Set-Variable ProgressPreference Continue
+  $previousInformationPreference = $InformationPreference
+  Set-Variable InformationPreference Continue
 
   if ($ChooseDayFromCalendar) {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
@@ -184,7 +186,7 @@ function Get-QuarantineToRelease {
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
-    Write-Host "Quarantine report from $($startDate.Date) to $($endDate)" -f "Yellow"
+    Write-InformationColored "Quarantine report from $($startDate.Date) to $($endDate)" -ForegroundColor "Yellow"
     
     do {
       # Credits: https://community.spiceworks.com/topic/2343368-merge-eop-quarantine-pages#entry-9354845
@@ -193,7 +195,7 @@ function Get-QuarantineToRelease {
       $QuarantinedMessagesAll += $QuarantinedMessages
     } until ( $QuarantinedMessages -eq $null )
 
-    Write-Host "Total items: $($QuarantinedMessagesAll.Count)" -f "Yellow"
+    Write-InformationColored "Total items: $($QuarantinedMessagesAll.Count)" -ForegroundColor "Yellow"
 
     $QuarantinedMessagesAll | ForEach {
       $Message = $_
@@ -323,8 +325,11 @@ function Get-QuarantineToRelease {
     }
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
+
+  Set-Variable ProgressPreference $previousProgressPreference
+  Set-Variable InformationPreference $previousInformationPreference
 }
 
 function Release-QuarantineFrom {
@@ -364,10 +369,12 @@ function Release-QuarantineFrom {
       }
     
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
   }
 }
+# Credits: https://www.jonathanmedd.net/2014/03/using-powershell-aliases-in-a-module.html
+Set-Alias -Name rqf -Value Release-QuarantineFrom -Description "Release Quarantine from (function)"
 
 function Release-QuarantineMessageId {
   param(
@@ -401,7 +408,7 @@ function Release-QuarantineMessageId {
               }
             $releasedResults | Format-Table -AutoSize
           } else {
-            Write-Host "No quarantined messages to release with id $($CurrentMessage) (already released or not found yet)." -f "Yellow"
+            Write-Warning "No quarantined messages to release with id $($CurrentMessage) (already released or not found yet)."
           }
         } catch {
           Write-Error $_.Exception.Message
@@ -409,13 +416,14 @@ function Release-QuarantineMessageId {
       }
       
     } else {
-      Write-Host "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs." -f "Red"
+      Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
     }
   }
 }
 
-# Export Modules ===================================================================================================================================================
+# Export Modules and Aliases =======================================================================================================================================
 
+Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Export-QuarantineEML"
 Export-ModuleMember -Function "Get-QuarantineFrom"
 Export-ModuleMember -Function "Get-QuarantineFromDomain"
