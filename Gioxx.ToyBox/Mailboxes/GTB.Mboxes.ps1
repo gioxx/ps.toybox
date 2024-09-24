@@ -64,33 +64,98 @@ function Add-MboxPermission {
         Switch ($AccessRights) {
           "FullAccess" {
             if ($AutoMapping) {
-              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Host
+              Write-Information "`nAdd $($CurrentUser) (FullAccess) to $($SourceMailbox) ..."
+              $addMboxPerm = Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False
+              $addMboxPermDN = (Get-User -Identity $addMboxPerm.User).DisplayName
+              [PSCustomObject]@{
+                Identity = $addMboxPerm.Identity
+                User = $addMboxPerm.User
+                DisplayName = $addMboxPermDN
+                AccessRights = $addMboxPerm.AccessRights
+                IsInherited = $addMboxPerm.IsInherited
+                Deny = $addMboxPerm.Deny
+              } | Out-Host
             } else {
-              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) without AutoMapping ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Host
+              Write-Information "`nAdd $($CurrentUser) (FullAccess) to $($SourceMailbox) without AutoMapping ..."
+              $addMboxPerm = Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False
+              $addMboxPermDN = (Get-User -Identity $addMboxPerm.User).DisplayName
+              [PSCustomObject]@{
+                Identity = $addMboxPerm.Identity
+                User = $addMboxPerm.User
+                DisplayName = $addMboxPermDN
+                AccessRights = $addMboxPerm.AccessRights
+                IsInherited = $addMboxPerm.IsInherited
+                Deny = $addMboxPerm.Deny
+              } | Out-Host
             }
           }
           "SendAs" {
-            Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
-            Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
+            Write-Information "`nAdd $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
+            $addMboxPerm = Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+            $addMboxPermDN = (Get-User -Identity $addMboxPerm.Trustee).DisplayName
+            [PSCustomObject]@{
+              Identity = $addMboxPerm.Identity
+              Trustee = $addMboxPerm.Trustee
+              DisplayName = $addMboxPermDN
+              AccessControlType = $addMboxPerm.AccessControlType
+              AccessRights = $addMboxPerm.AccessRights
+            } | Out-Host
           }
           "SendOnBehalfTo" {
-            Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
+            Write-Information "`nAdd $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
             Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{add="$($CurrentUser)"} -Confirm:$False | Out-Host
           }
           "All" {
             if ($AutoMapping) {
-              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False | Out-Host
-              Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
-              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
-            }
-            else {
-              Write-Information "Add $($CurrentUser) (FullAccess) to $($SourceMailbox) without AutoMapping ..."
-              Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False | Out-Host
-              Write-Information "Add $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
-              Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False | Out-Host
+              
+              Write-Information "`nAdd $($CurrentUser) (FullAccess) to $($SourceMailbox) ..."
+              $addMboxPerm = Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$True -Confirm:$False
+              $addMboxPermDN = (Get-User -Identity $addMboxPerm.User).DisplayName
+              [PSCustomObject]@{
+                Identity = $addMboxPerm.Identity
+                User = $addMboxPerm.User
+                DisplayName = $addMboxPermDN
+                AccessRights = $addMboxPerm.AccessRights
+                IsInherited = $addMboxPerm.IsInherited
+                Deny = $addMboxPerm.Deny
+              } | Out-Host
+              
+              Write-Information "`nAdd $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
+              $addMboxPerm = Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+              $addMboxPermDN = (Get-User -Identity $addMboxPerm.Trustee).DisplayName
+              [PSCustomObject]@{
+                Identity = $addMboxPerm.Identity
+                Trustee = $addMboxPerm.Trustee
+                DisplayName = $addMboxPermDN
+                AccessControlType = $addMboxPerm.AccessControlType
+                AccessRights = $addMboxPerm.AccessRights
+              } | Out-Host
+            
+            } else {
+
+              Write-Information "`nAdd $($CurrentUser) (FullAccess) to $($SourceMailbox) without AutoMapping ..."
+              $addMboxPerm = Add-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -AutoMapping:$False -Confirm:$False
+              $addMboxPermDN = (Get-User -Identity $addMboxPerm.User).DisplayName
+              [PSCustomObject]@{
+                Identity = $addMboxPerm.Identity
+                User = $addMboxPerm.User
+                DisplayName = $addMboxPermDN
+                AccessRights = $addMboxPerm.AccessRights
+                IsInherited = $addMboxPerm.IsInherited
+                Deny = $addMboxPerm.Deny
+              } | Out-Host
+
+              Write-Information "`nAdd $($CurrentUser) (SendAs) to $($SourceMailbox) ..."
+              $addMboxPerm = Add-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+              $addMboxPermDN = (Get-User -Identity $addMboxPerm.Trustee).DisplayName
+              [PSCustomObject]@{
+                Identity = $addMboxPerm.Identity
+                Trustee = $addMboxPerm.Trustee
+                DisplayName = $addMboxPermDN
+                AccessControlType = $addMboxPerm.AccessControlType
+                AccessRights = $addMboxPerm.AccessRights
+              } | Out-Host
+
             }
           }
         }
@@ -423,6 +488,7 @@ function New-SharedMailbox {
     Write-Host "Set outgoing e-mail copy save for $($SharedMailboxSMTPAddress)" -f "Yellow"
     Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSentAsEnabled $True
     Set-Mailbox $SharedMailboxSMTPAddress -MessageCopyForSendOnBehalfEnabled $True
+    Set-Mailbox $SharedMailboxSMTPAddress -RetainDeletedItemsFor 30
     Write-Host "All done, remember to set access and editing rights to the new mailbox."
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
@@ -490,12 +556,24 @@ function Remove-MboxPermission {
       $UserMailbox | ForEach {
         $CurrentUser = $_
         Switch ($AccessRights) {
-          "FullAccess" { Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False }
-          "SendAs" { Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False }
-          "SendOnBehalfTo" { Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{remove="$($CurrentUser)"} -Confirm:$False }
+          "FullAccess" { 
+            Write-Information "Removing full access for $($CurrentUser) from $($SourceMailbox) ..."
+            Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False 
+          }
+          "SendAs" { 
+            Write-Information "Removing SendAs for $($CurrentUser) from $($SourceMailbox) ..." 
+            Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False 
+          }
+          "SendOnBehalfTo" { 
+            Write-Information "Removing SendOnBehalfTo for $($CurrentUser) from $($SourceMailbox) ..."
+            Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{remove="$($CurrentUser)"} -Confirm:$False 
+          }
           "All" {
+            Write-Information "Removing full access for $($CurrentUser) from $($SourceMailbox) ..."
             Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False
+            Write-Information "Removing SendAs for $($CurrentUser) from $($SourceMailbox) ..."
             Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
+            Write-Information "Removing SendOnBehalfTo for $($CurrentUser) from $($SourceMailbox) ..."
             Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{remove="$($CurrentUser)"} -Confirm:$False
           }
         }

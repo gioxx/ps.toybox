@@ -30,7 +30,7 @@ function Export-DG {
     if (-not([string]::IsNullOrEmpty($folderCSV))) { $CSV = $True }
     if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
 
-    $DGs | ForEach {
+    $DGs | ForEach-Object {
       try {
         $CurrentDG = $_
         $GetDG = Get-DistributionGroup $CurrentDG
@@ -38,7 +38,7 @@ function Export-DG {
         $PercentComplete = (($DGsCounter / $DGs.Count) * 100)
         Write-Progress -Activity "Processing $($GetDG.DisplayName)" -Status "$DGsCounter out of $($DGs.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
-        Get-DistributionGroupMember $CurrentDG | ForEach {
+        Get-DistributionGroupMember $CurrentDG | ForEach-Object {
           if ($All) {
             $arr_ExportedDG += New-Object -TypeName PSObject -Property $([ordered]@{
               "Group Name" = $GetDG.DisplayName
@@ -110,7 +110,7 @@ function Export-DDG {
     if (-not([string]::IsNullOrEmpty($folderCSV))) { $CSV = $True }
     if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
 
-    $DDGs | ForEach {
+    $DDGs | ForEach-Object {
       try {
         $CurrentDDG = $_
         $GetDDG = Get-DynamicDistributionGroup $CurrentDDG
@@ -118,7 +118,7 @@ function Export-DDG {
         $PercentComplete = (($DDGsCounter / $DDGs.Count) * 100)
         Write-Progress -Activity "Processing $($GetDDG.DisplayName)" -Status "$DDGsCounter out of $($DDGs.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
-        Get-DynamicDistributionGroupMember $CurrentDDG | ForEach {
+        Get-DynamicDistributionGroupMember $CurrentDDG | ForEach-Object {
           if ($All) {
             $arr_ExportedDDG += New-Object -TypeName PSObject -Property $([ordered]@{
               "Group Name" = $GetDDG.DisplayName
@@ -190,7 +190,7 @@ function Export-M365Group {
     if (-not([string]::IsNullOrEmpty($folderCSV))) { $CSV = $True }
     if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
 
-    $M365Gs | ForEach {
+    $M365Gs | ForEach-Object {
       try {
         $CurrentM365G = $_
         $GetM365G = Get-UnifiedGroup $CurrentM365G
@@ -198,7 +198,7 @@ function Export-M365Group {
         $PercentComplete = (($M365GsCounter / $M365Gs.Count) * 100)
         Write-Progress -Activity "Processing $($GetM365G.DisplayName)" -Status "$M365GsCounter out of $($M365Gs.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
 
-        $GetM365G | Get-UnifiedGroupLinks -LinkType Member | ForEach {
+        $GetM365G | Get-UnifiedGroupLinks -LinkType Member | ForEach-Object {
           if ($All) {
             $arr_ExportedM365Groups += New-Object -TypeName PSObject -Property $([ordered]@{
               "Group Name" = $GetM365G.DisplayName
@@ -234,6 +234,34 @@ function Export-M365Group {
     } else {
       $arr_ExportedM365Groups | Out-Host
     }
+
+  } else {
+    Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
+  }
+}
+
+function Get-RoleGroupsMembers {
+  Set-Variable ProgressPreference Continue
+  $eolConnectedCheck = priv_CheckEOLConnection
+
+  if ( $eolConnectedCheck -eq $true ) {
+    $roleGroups = Get-RoleGroup
+    $rgCounter = 0
+
+    $permTable = foreach ($rg in $roleGroups) {
+        $rgCounter++
+        $PercentComplete = (($rgCounter / $roleGroups.Count) * 100)
+        Write-Progress -Activity "Processing $($rg)" -Status "$rgCounter out of $($roleGroups.Count) ($($PercentComplete.ToString('0.00'))%)" -PercentComplete $PercentComplete
+
+        $rgMembers = (Get-RoleGroupMember $rg).DisplayName -join "`n"
+        [PSCustomObject]@{
+            "Role Group" = $rg
+            Count = (Get-RoleGroupMember $rg).Count
+            Members = $rgMembers
+        }
+    }
+
+    $permTable | Sort-Object Count -Descending | Format-Table -AutoSize -Wrap
 
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
@@ -302,7 +330,7 @@ function Get-UserGroups {
         }
 
         if ( $groups -ne $null ) {
-          $groups | ForEach {
+          $groups | ForEach-Object {
             $groupIDs = $_.id
             $otherproperties = $_.AdditionalProperties
 
@@ -353,4 +381,5 @@ Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Export-DG"
 Export-ModuleMember -Function "Export-DDG"
 Export-ModuleMember -Function "Export-M365Group"
+Export-ModuleMember -Function "Get-RoleGroupsMembers"
 Export-ModuleMember -Function "Get-UserGroups"

@@ -10,7 +10,7 @@ function Connect-EOL {
     Write-Host "Install the ExchangeOnlineManagement module using this command (then relaunch this script): `nInstall-Module ExchangeOnlineManagement" -f "Yellow"
   } else {
     Import-Module ExchangeOnlineManagement
-    Connect-ExchangeOnline -UserPrincipalName $UserPrincipalName -ShowBanner:$False
+    Connect-ExchangeOnline -UserPrincipalName $UserPrincipalName -ShowBanner:$False -SkipLoadingCmdletHelp
   }
 }
 

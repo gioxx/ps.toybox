@@ -1,6 +1,8 @@
 # DATA =============================================================================================================================================================
 $GTB = [ordered]@{
-  LicensesJSON = 'https://raw.githubusercontent.com/gioxx/ps.toybox/main/JSON/M365_licenses.json'
+  LicenseFilePath = 'JSON/M365_licenses.json'
+  RepoName = 'ps.toybox'
+  RepoOwner = 'gioxx'
 }
 New-Variable -Name GTBVars -Value $GTB -Scope Script -Force # Lista licenze M365 utilizzata in Export-MsolAccountSku
 

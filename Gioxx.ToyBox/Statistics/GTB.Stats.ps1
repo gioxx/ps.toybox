@@ -91,7 +91,25 @@ function Export-MsolAccountSku {
   if ( $mggConnectedCheck -eq $true ) {
     $arr_MsolAccountSku = @()
     $ProcessedCount = 0
-    $licenseFile = Invoke-RestMethod -Method Get -Uri $GTBVars.LicensesJSON
+    $licenseFileURL = "https://raw.githubusercontent.com/$($GTBVars.RepoOwner)/$($GTBVars.RepoName)/main/$($GTBVars.LicenseFilePath)"
+    
+    # Check GitHub for last commit date
+    $apiUrl = "https://api.github.com/repos/$($GTBVars.RepoOwner)/$($GTBVars.RepoName)/commits?path=$($GTBVars.LicenseFilePath)"
+    $response = Invoke-RestMethod -Uri $apiUrl -Headers @{'User-Agent' = 'Gioxx.ToyBox'}
+    $lastCommitDate = $response[0].commit.committer.date
+    $utcDateTime = [DateTime]::ParseExact($lastCommitDate, "MM/dd/yyyy HH:mm:ss", $null)
+    "License file: $($licenseFileURL)`nLast license file update: $($utcDateTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"))" | Out-Host
+
+    # Download license file from GitHub (https://raw.githubusercontent.com/gioxx/ps.toybox/main/JSON/M365_licenses.json)
+    try {
+      $licenseFile = Invoke-RestMethod -Method Get -Uri $licenseFileURL
+      "License file downloaded correctly." | Out-Host
+    }
+    catch {
+      "License file retrieval error: $_" | Out-Host
+      exit 1
+    }
+
     $Users = Get-MgUser -Filter 'assignedLicenses/$count ne 0' -ConsistencyLevel eventual -CountVariable totalUsers -All
 
     $Users | ForEach {

@@ -108,6 +108,8 @@ function Get-QuarantineToRelease {
       [int]$Interval,
       [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Show results in a grid view")]
       [switch] $GridView,
+      [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Show results in a HTML file")]
+      [switch] $HTML,
       [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Export results in a CSV file")]
       [switch] $CSV
   )
@@ -320,6 +322,28 @@ function Get-QuarantineToRelease {
       $folder = priv_CheckFolder($folderCSV)
       $CSVfile = priv_SaveFileWithProgressiveNumber("$($folder)\$((Get-Date -format "yyyyMMdd").ToString())_M365-QuarantineToRelease-Report.csv")
       $arr_QuarantineToRelease | Export-CSV $CSVfile -NoTypeInformation -Encoding UTF8 -Delimiter ";"
+    } elseif ( $HTML ) {
+      if (-not(Get-Module -Name PSWriteHTML)) { 
+        if (Get-Module -ListAvailable -Name PSWriteHTML) {
+          Import-Module PSWriteHTML
+        } else {
+          Write-InformationColored "PSWriteHTML module is not available." -ForegroundColor "Yellow"
+          $Confirm = Read-Host "Are you sure you want to install module? [Y] Yes [N] No "
+          if ( $Confirm -match "[yY]" ) {
+            try {
+              Write-InformationColored "Installing PSWriteHTML module ..." -ForegroundColor "Yellow"
+              Install-Module PSWriteHTML -Scope CurrentUser -AllowClobber -Force
+            } catch {
+              Write-Error "`nCan't install PSWriteHTML module. `nPlease check logs."
+              exit
+            }
+          } else {
+            Write-Error "PSWriteHTML module is required to run this script. Please install it first using Install-Module PSWriteHTML cmdlet."
+            exit
+          }
+        }
+      }
+      $arr_QuarantineToRelease | Out-GridHtml
     } else {
       $arr_QuarantineToRelease | Select-Object SenderAddress,RecipientAddress,Subject,QuarantineTypes,Released | Sort-Object Subject
     }
