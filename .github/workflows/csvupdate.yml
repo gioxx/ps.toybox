@@ -26,7 +26,8 @@ jobs:
           else
             echo "Files are different. Update required."
             echo "::set-output name=files_identical::false"
-      
+          fi
+
       - name: Replace CSV file if necessary
         if: steps.compare_files.outputs.files_identical == 'false'
         run: |
