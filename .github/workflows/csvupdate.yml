@@ -46,20 +46,20 @@ jobs:
         if: env.files_identical == 'false'
         run: |
           python3 -c "
-import csv
-import json
+          import csv
+          import json
 
-csv_file_path = 'JSON/Product names and service plan identifiers for licensing.csv'
-json_file_path = 'JSON/M365_licenses.json'
+          csv_file_path = 'JSON/Product names and service plan identifiers for licensing.csv'
+          json_file_path = 'JSON/M365_licenses.json'
 
-# Leggi il CSV
-with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
-    reader = csv.DictReader(csvfile)
-    rows = list(reader)
+          # Leggi il CSV
+          with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+              reader = csv.DictReader(csvfile)
+              rows = list(reader)
 
-# Scrivi il JSON
-with open(json_file_path, 'w', encoding='utf-8') as jsonfile:
-    json.dump(rows, jsonfile, indent=4)
+          # Scrivi il JSON
+          with open(json_file_path, 'w', encoding='utf-8') as jsonfile:
+              json.dump(rows, jsonfile, indent=4)
           "
 
       # Debug: Controlla se Git rileva le modifiche
