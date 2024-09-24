@@ -12,7 +12,7 @@ jobs:
     steps:
       # Checkout del repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.1.7
 
       # Configurazione di Git per gestire CRLF e LF
       - name: Setup git to handle CRLF/LF differences
@@ -24,16 +24,17 @@ jobs:
           curl -o "Product names and service plan identifiers for licensing.csv" "https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv"
 
       # Confronto tra i file CSV
-      - name: Compare CSV files
+      - name: Compare CSV files ignoring whitespace and line endings
         id: compare_files
         run: |
-          if cmp --silent "Product names and service plan identifiers for licensing.csv" "JSON/Product names and service plan identifiers for licensing.csv"; then
+          if diff --strip-trailing-cr --ignore-all-space "Product names and service plan identifiers for licensing.csv" "JSON/Product names and service plan identifiers for licensing.csv"; then
             echo "Files are identical. No update needed."
             echo "files_identical=true" >> $GITHUB_ENV
           else
             echo "Files are different. Update required."
             echo "files_identical=false" >> $GITHUB_ENV
           fi
+
 
       # Sostituzione del file CSV se necessario
       - name: Replace CSV file if necessary
