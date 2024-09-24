@@ -1,4 +1,4 @@
-name: Update license CSV if newer
+name: Update CSV if newer
 
 on:
   schedule:
@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout del repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -22,31 +21,31 @@ jobs:
       - name: Download new CSV file
         run: |
           curl -o "Product names and service plan identifiers for licensing.csv" "https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv"
-      
-      # Confronto tra il file CSV scaricato e quello esistente nel repository
+
+      # Confronto tra i file CSV
       - name: Compare CSV files
         id: compare_files
         run: |
           if cmp --silent "Product names and service plan identifiers for licensing.csv" "JSON/Product names and service plan identifiers for licensing.csv"; then
             echo "Files are identical. No update needed."
-            echo "::set-output name=files_identical::true"
+            echo "files_identical=true" >> $GITHUB_ENV
           else
             echo "Files are different. Update required."
-            echo "::set-output name=files_identical::false"
+            echo "files_identical=false" >> $GITHUB_ENV
           fi
 
-      # Sostituzione del file CSV esistente se necessario
+      # Sostituzione del file CSV se necessario
       - name: Replace CSV file if necessary
-        if: steps.compare_files.outputs.files_identical == 'false'
+        if: env.files_identical == 'false'
         run: |
           mv "Product names and service plan identifiers for licensing.csv" "JSON/Product names and service plan identifiers for licensing.csv"
 
       # Commit e push delle modifiche, se necessarie
       - name: Commit and push changes
-        if: steps.compare_files.outputs.files_identical == 'false'
+        if: env.files_identical == 'false'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add --renormalize "JSON/Product names and service plan identifiers for licensing.csv"
+          git add --renormalize "JSON/Product names and service plan identifiers for licensing.csv" --force
           git commit -m "Updated Microsoft CSV file"
           git push
