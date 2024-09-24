@@ -1,0 +1,42 @@
+name: Update license file (CSV) if newer
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+  
+jobs:
+  update-csv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download new CSV file
+        run: |
+          curl -o "Product names and service plan identifiers for licensing.csv" "https://download.microsoft.com/download/e/3/e/e3e9faf2-f28b-490a-9ada-c6089a1fc5b0/Product%20names%20and%20service%20plan%20identifiers%20for%20licensing.csv"
+      
+      - name: Compare CSV files
+        id: compare_files
+        run: |
+          if cmp --silent "Product names and service plan identifiers for licensing.csv" "JSON/Product names and service plan identifiers for licensing.csv"; then
+            echo "Files are identical. No update needed."
+            echo "::set-output name=files_identical::true"
+          else
+            echo "Files are different. Update required."
+            echo "::set-output name=files_identical::false"
+      
+      - name: Replace CSV file if necessary
+        if: steps.compare_files.outputs.files_identical == 'false'
+        run: |
+          mv "Product names and service plan identifiers for licensing.csv" "JSON/Product names and service plan identifiers for licensing.csv"
+      
+      - name: Commit and push changes
+        if: steps.compare_files.outputs.files_identical == 'false'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add "JSON/Product names and service plan identifiers for licensing.csv"
+          git commit -m "Updated license CSV file"
+          git push
