@@ -1,4 +1,4 @@
-name: Update CSV if newer
+name: Update license file
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-csv:
+  check-csv:
     runs-on: ubuntu-latest
 
     steps:
@@ -35,18 +35,39 @@ jobs:
             echo "files_identical=false" >> $GITHUB_ENV
           fi
 
-
       # Sostituzione del file CSV se necessario
       - name: Replace CSV file if necessary
         if: env.files_identical == 'false'
         run: |
           mv "Product names and service plan identifiers for licensing.csv" "JSON/Product names and service plan identifiers for licensing.csv"
 
+      # Converti CSV in JSON se il CSV è cambiato
+      - name: Convert CSV to JSON
+        if: env.files_identical == 'false'
+        run: |
+          python3 -c "
+import csv
+import json
+
+csv_file_path = 'JSON/Product names and service plan identifiers for licensing.csv'
+json_file_path = 'JSON/M365_licenses.json'
+
+# Leggi il CSV
+with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+    reader = csv.DictReader(csvfile)
+    rows = list(reader)
+
+# Scrivi il JSON
+with open(json_file_path, 'w', encoding='utf-8') as jsonfile:
+    json.dump(rows, jsonfile, indent=4)
+          "
+
       # Debug: Controlla se Git rileva le modifiche
       - name: Check for changes
         run: |
           git status
           git diff "JSON/Product names and service plan identifiers for licensing.csv"
+          git diff "JSON/M365_licenses.json"
 
       # Commit e push delle modifiche, se necessarie
       - name: Commit and push changes
@@ -57,6 +78,7 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add --renormalize "JSON/Product names and service plan identifiers for licensing.csv" --force
+          git add --renormalize "JSON/M365_licenses.json" --force
           git diff --cached # Verifica se ci sono cambiamenti nell'index
-          git commit -m "Updated Microsoft CSV file" || echo "No changes to commit"
+          git commit -m "Updated license file and JSON file" || echo "No changes to commit"
           git push
