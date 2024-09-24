@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-csv:
+  check-licensefile:
     runs-on: ubuntu-latest
 
     steps:
