@@ -33,6 +33,7 @@ jobs:
           else
             echo "Files are different. Update required."
             echo "::set-output name=files_identical::false"
+          fi
 
       # Sostituzione del file CSV esistente se necessario
       - name: Replace CSV file if necessary
