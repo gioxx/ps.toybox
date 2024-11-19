@@ -10,10 +10,10 @@ function Get-RoomsDetails {
     [switch] $GridView
   )
 
+  priv_SetPreferences -Verbose
+  $eolConnectedCheck = priv_CheckEOLConnection
   $mboxCounter = 0
   $arr_RoomDetails = @()
-  $eolConnectedCheck = priv_CheckEOLConnection
-  Set-Variable ProgressPreference Continue
 
   if (-not([string]::IsNullOrEmpty($folderCSV))) { $CSV = $True }
   if ($CSV) { $folder = priv_CheckFolder($folderCSV) }
@@ -50,6 +50,8 @@ function Get-RoomsDetails {
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
+
+  priv_RestorePreferences
 }
 
 

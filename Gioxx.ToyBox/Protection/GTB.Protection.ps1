@@ -42,17 +42,13 @@ function Export-MFAStatus {
     [string] $folderCSV
   )
   
-  $previousInformationPreference = $InformationPreference
-  Set-Variable InformationPreference Continue
-  $previousProgressPreference = $ProgressPreference
-  Set-Variable ProgressPreference Continue
-  
-  $folder = priv_CheckFolder($folderCSV)
+  priv_SetPreferences -Verbose
   $mggConnectedCheck = priv_CheckMGGraphModule
+  $folder = priv_CheckFolder($folderCSV)
   
   if ( $mggConnectedCheck -eq $true ) {
     try {
-      Connect-MgGraph -Scopes "Reports.Read.All,AuditLog.Read.All"
+      Connect-MgGraph -Scopes "Reports.Read.All,AuditLog.Read.All" -NoWelcome
       # Fetch user registration detail report from Microsoft Graph
       $Users = Get-MgReportAuthenticationMethodUserRegistrationDetail
 
@@ -88,8 +84,7 @@ function Export-MFAStatus {
     Write-Error "`nCan't connect or use Microsoft Graph Modules. `nPlease check logs."
   }
 
-  Set-Variable InformationPreference $previousInformationPreference
-  Set-Variable ProgressPreference $previousProgressPreference
+  priv_RestorePreferences
 }
 
 function User-DisableDevices {

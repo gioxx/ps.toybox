@@ -119,10 +119,7 @@ function Get-QuarantineToRelease {
       return
   }
 
-  $previousProgressPreference = $ProgressPreference
-  Set-Variable ProgressPreference Continue
-  $previousInformationPreference = $InformationPreference
-  Set-Variable InformationPreference Continue
+  priv_SetPreferences -Verbose
 
   if ($ChooseDayFromCalendar) {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
@@ -352,8 +349,7 @@ function Get-QuarantineToRelease {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
 
-  Set-Variable ProgressPreference $previousProgressPreference
-  Set-Variable InformationPreference $previousInformationPreference
+  priv_RestorePreferences
 }
 
 function Release-QuarantineFrom {

@@ -10,7 +10,7 @@ function Export-MboxStatistics {
     [switch] $Round
   )
   
-  Set-Variable ProgressPreference Continue
+  priv_SetPreferences -Verbose
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
@@ -76,6 +76,8 @@ function Export-MboxStatistics {
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
+
+  priv_RestorePreferences
 }
 
 function Export-MsolAccountSku {
@@ -84,9 +86,9 @@ function Export-MsolAccountSku {
     [string] $folderCSV
   )
   
-  Set-Variable ProgressPreference Continue
-  $folder = priv_CheckFolder($folderCSV)
+  priv_SetPreferences -Verbose
   $mggConnectedCheck = priv_CheckMGGraphModule
+  $folder = priv_CheckFolder($folderCSV)
 
   if ( $mggConnectedCheck -eq $true ) {
     $arr_MsolAccountSku = @()
@@ -139,10 +141,10 @@ function Export-MsolAccountSku {
     $arr_MsolAccountSku | Export-CSV $CSV -NoTypeInformation -Encoding UTF8 -Delimiter ";"
 
   } else {
-    Write-Host "`nCan't connect or use Microsoft Graph modules. `nPlease check logs." -f "Red"
+    Write-Error "`nCan't connect or use Microsoft Graph modules. `nPlease check logs."
   }
   
-  
+  priv_RestorePreferences
 }
 
 # Export Modules and Aliases =======================================================================================================================================

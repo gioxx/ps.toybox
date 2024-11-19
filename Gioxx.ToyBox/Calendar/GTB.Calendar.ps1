@@ -27,6 +27,8 @@ function Export-CalendarPermission {
   param(
     [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Mailbox to analyze (e.g. info@contoso.com)")]
     [string[]] $SourceMailbox,
+    [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Domain to analyze (e.g. contoso.com)")]
+    [string] $SourceDomain,
     [Parameter(Mandatory=$False, HelpMessage="Folder where export CSV file (e.g. C:\Temp)")]
     [string] $folderCSV,
     [Parameter(Mandatory=$False, ValueFromPipeline=$True, HelpMessage="Export all mailboxes calendar permissions")]
@@ -34,17 +36,20 @@ function Export-CalendarPermission {
   )
 
   begin {
-    $previousProgressPreference = $ProgressPreference
-    Set-Variable ProgressPreference Continue
-    
+    priv_SetPreferences -Verbose
+    $eolConnectedCheck = priv_CheckEOLConnection
     $mboxCounter = 0
     $arr_CalPerm = @()
-    $eolConnectedCheck = priv_CheckEOLConnection
 
-    if ( $eolConnectedCheck -eq $true ) {
-      if ([string]::IsNullOrEmpty($SourceMailbox)) {
-        Write-Warning "WARNING: no mailbox(es) specified, I scan all the mailboxes, please be patient."
+    if ( $eolConnectedCheck -eq $true ) {      
+      if ([string]::IsNullOrEmpty($SourceMailbox) -And [string]::IsNullOrEmpty($SourceDomain)) {
+        Write-Warning "WARNING: no mailbox(es) or domain(s) specified, I scan all the mailboxes, please be patient."
         $All = $True
+      }
+
+      if (-not([string]::IsNullOrEmpty($SourceDomain))) {
+        Write-InformationColored "Analyzing mailboxes in $($SourceDomain) ..." -ForegroundColor Cyan
+        $SourceMailbox = Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue | Where { $_.RecipientTypeDetails -ne "GuestMailUser" -And $_.EmailAddresses -like "*@" + $SourceDomain }
       }
 
       if ($All) {
@@ -86,7 +91,7 @@ function Export-CalendarPermission {
       $arr_CalPerm | Out-Host
     }
 
-    Set-Variable ProgressPreference $previousProgressPreference
+    priv_RestorePreferences
   }
 }
 
@@ -140,7 +145,7 @@ function Set-OoO {
     $previousMessage = Get-MailboxAutoReplyConfiguration -Identity $SourceMailbox | Select -ExpandProperty ExternalMessage
     if ( [string]::IsNullOrEmpty($previousMessage) ) {
       $proposedText = "I'm out of office and will have limited access to my mailbox.<br />
-        I will reply to your email as soon as possible.
+        I will reply to your e-mail as soon as possible.
         <br /><br />
         Have a nice day."
     } else { $proposedText = $previousMessage }

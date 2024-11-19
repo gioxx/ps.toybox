@@ -14,10 +14,10 @@ function Export-DG {
     [switch] $GridView
   )
 
-  Set-Variable ProgressPreference Continue
+  priv_SetPreferences -Verbose
+  $eolConnectedCheck = priv_CheckEOLConnection
   $DGsCounter = 0
   $arr_ExportedDG = @()
-  $eolConnectedCheck = priv_CheckEOLConnection
   
   if ( $eolConnectedCheck -eq $true ) {
     if ( [string]::IsNullOrEmpty($DG) ) { $All = $True } else { $DGs = Get-DistributionGroup $DG }
@@ -78,6 +78,8 @@ function Export-DG {
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
+
+  priv_RestorePreferences
 }
 
 function Export-DDG {
@@ -94,10 +96,10 @@ function Export-DDG {
     [switch] $GridView
   )
 
-  Set-Variable ProgressPreference Continue
+  priv_SetPreferences -Verbose
+  $eolConnectedCheck = priv_CheckEOLConnection
   $DDGsCounter = 0
   $arr_ExportedDDG = @()
-  $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
     if ( [string]::IsNullOrEmpty($DDG) ) { $All = $True } else { $DDGs = Get-DynamicDistributionGroup $DDG }
@@ -158,6 +160,8 @@ function Export-DDG {
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
+
+  priv_RestorePreferences
 }
 
 function Export-M365Group {
@@ -174,10 +178,10 @@ function Export-M365Group {
     [switch] $GridView
   )
 
-  Set-Variable ProgressPreference Continue
+  priv_SetPreferences -Verbose
+  $eolConnectedCheck = priv_CheckEOLConnection
   $M365GsCounter = 0
   $arr_ExportedM365Groups = @()
-  $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
     if ( [string]::IsNullOrEmpty($M365G) ) { $All = $True } else { $M365Gs = Get-UnifiedGroup $M365G }
@@ -238,10 +242,13 @@ function Export-M365Group {
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
   }
+
+  priv_RestorePreferences
 }
 
 function Get-RoleGroupsMembers {
-  Set-Variable ProgressPreference Continue
+  priv_SetPreferences
+
   $eolConnectedCheck = priv_CheckEOLConnection
 
   if ( $eolConnectedCheck -eq $true ) {
@@ -288,14 +295,14 @@ function Get-UserGroups {
           Write-Host "Recipient not available or not found ($($UserPrincipalName))." -f "Red"
           break
         } elseif ($emailAddresses.Count -gt 1) {
-          Write-Host "Complete e-mail address not specified, multiple email addresses found:" -f "Cyan"
+          Write-Host "Complete e-mail address not specified, multiple e-mail addresses found:" -f "Cyan"
           $emailAddresses | ForEach-Object { Write-Host $_.Replace('SMTP:', ' ') }
           Write-Host "Run the command again but specify the full address to perform a more accurate search." -f "Cyan"
           $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress | Select-Object -First 1
           Write-Host "First user selected: $($UserPrincipalName)" -f "Cyan"
         } else {
           $UserPrincipalName = (Get-Recipient $UserPrincipalName).PrimarySmtpAddress
-          Write-Host "Complete e-mail address not specified, user found: $($UserPrincipalName)" -f "Cyan"
+          Write-Host "Complete e-mail address not specified, first match found: $($UserPrincipalName)" -f "Cyan"
         }
       } catch {
         Write-Error $_.Exception.Message

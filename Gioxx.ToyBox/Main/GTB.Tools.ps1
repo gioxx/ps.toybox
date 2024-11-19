@@ -2,42 +2,42 @@
 
 function priv_CheckEOLConnection {
     $eolConnected = $false
-    $userConnected = priv_MailSearcher
 
     if ( (Get-Module -Name ExchangeOnlineManagement -ListAvailable).count -gt 0 ) {
         try {
             Get-EXOMailbox -ResultSize 1 -ErrorAction Stop
             $eolConnected = $true
         } catch {
+            $userConnected = priv_MailSearcher
             if ( $userConnected -ne "notfound" ) {
-                Write-Host "Please wait until I load Microsoft Exchange Online Management.`nConnecting using $($userConnected) ..." -f "Yellow"
-                Connect-EOL -UserPrincipalName $userConnected 
+                Write-InformationColored "Please wait until I load Microsoft Exchange Online Management.`nConnecting using $($userConnected) ..." -ForegroundColor Yellow
+                Connect-EOL -UserPrincipalName $userConnected
             } else {
-                Write-Host "Please wait until I load Microsoft Exchange Online Management." -f "Yellow"
-                Connect-EOL 
+                Write-InformationColored "Please wait until I load Microsoft Exchange Online Management." -ForegroundColor Yellow
+                Connect-EOL
             }
             $eolConnected = $true
         }
     } else {
-        Write-Host "Microsoft Exchange Online Management module is not available."  -f "Yellow" 
+        Write-Warning "Microsoft Exchange Online Management module is not available."
         $Confirm = Read-Host "Are you sure you want to install module? [Y] Yes [N] No "
         if ( $Confirm -match "[yY]" ) {
             try {
-                Write-host "Installing Microsoft Exchange Online Management PowerShell module ..."
+                Write-InformationColored "Installing Microsoft Exchange Online Management PowerShell module ..." -ForegroundColor Yellow
                 Install-Module ExchangeOnlineManagement -Scope CurrentUser -AllowClobber -Force
                 if ( $userConnected -ne "notfound" ) { 
-                    Write-Host "Please wait until I load Microsoft Exchange Online Management.`nConnecting using $($userConnected) ..." -f "Yellow"
+                    Write-InformationColored "Please wait until I load Microsoft Exchange Online Management.`nConnecting using $($userConnected) ..." -ForegroundColor Yellow
                     Connect-EOL -UserPrincipalName $userConnected
                 } else {
                     Connect-EOL
                 }
                 $eolConnected = $true
             } catch {
-                Write-Host "`nCan't install Exchange Online Management modules. `nPlease check logs." -f "Red"
+                Write-Error "`nCan't install Exchange Online Management modules. `nPlease check logs."
                 exit
             }
         } else {
-            Write-Host "`nMicrosoft Exchange Online Management module is required to run this script. `nPlease install module using Install-Module ExchangeOnlineManagement cmdlet." -f "Red"
+            Write-Error "`nMicrosoft Exchange Online Management module is required to run this script. `nPlease install module using Install-Module ExchangeOnlineManagement cmdlet."
             exit
         }
     }
@@ -60,7 +60,7 @@ function priv_CheckMsolEmbeddedService {
         }
     } else {
         Write-Error "MSOnline module is not available on the system."
-        Write-InformationColored "Please use embedded Windows PowerShell and execute this command: `nInstall-Module MSOnline" -ForegroundColor "Yellow"
+        Write-InformationColored "Please use embedded Windows PowerShell and execute this command: `nInstall-Module MSOnline" -ForegroundColor Yellow
     }
 
     return $msolServiceConnected
@@ -84,29 +84,29 @@ function priv_CheckMGGraphModule {
             Get-MgUser -ErrorAction Stop
             $mggConnected = $true
         } catch {
-            Write-Host "Please wait until I load Microsoft Graph, the operation may take a minute or more." -f "Yellow"
+            Write-InformationColored "Please wait until I load Microsoft Graph, the operation may take a minute or more." -ForegroundColor Yellow
             # Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
             # Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
             Connect-MgGraph
             $mggConnected = $true
         }
     } else {
-        Write-Host "Microsoft Graph PowerShell module is not available."  -f "Yellow" 
+        Write-Warning "Microsoft Graph PowerShell module is not available."
         $Confirm = Read-Host "Are you sure you want to install module? [Y] Yes [N] No "
         if ( $Confirm -match "[yY]" ) {
             try {
-                Write-host "Installing Microsoft Graph PowerShell module ..."
+                Write-InformationColored "Installing Microsoft Graph PowerShell module ..." -ForegroundColor Yellow
                 Install-Module Microsoft.Graph -Repository PSGallery -Scope CurrentUser -AllowClobber -Force
                 # Import-Module Microsoft.Graph -ErrorAction SilentlyContinue
                 # Import-Module Microsoft.Graph.Users -ErrorAction SilentlyContinue
                 Connect-MgGraph
                 $mggConnected = $true
             } catch {
-                Write-Host "`nCan't install and import Graph modules. `nPlease check logs." -f "Red"
+                Write-Error "`nCan't install and import Graph modules. `nPlease check logs."
                 exit
             }
         } else {
-            Write-Host "`nMicrosoft Graph PowerShell module is required to run this script. `nPlease install module using Install-Module Microsoft.Graph cmdlet." -f "Red"
+            Write-Error "`nMicrosoft Graph PowerShell module is required to run this script. `nPlease install module using Install-Module Microsoft.Graph cmdlet."
             exit
         }
     }
@@ -162,7 +162,7 @@ function priv_GUI_TextBox ($headerMessage, $defaultText) {
 
     if ($textBox.Text -eq '') {
         # Empty TextBox
-        Write-Host "Message can't be empty, operation canceled." -f "Yellow"
+        Write-Error "Message can't be empty, operation canceled."
         break
     } else {
         if ( $ShowDialogResult -eq [System.Windows.Forms.DialogResult]::OK ) {
@@ -175,7 +175,7 @@ function priv_GUI_TextBox ($headerMessage, $defaultText) {
         }
 
         if ( $ShowDialogResult -eq [System.Windows.Forms.DialogResult]::Cancel ) {
-            Write-Host "Operation canceled (Aborted by user)." -f "Yellow"
+            Write-Error "Operation canceled (Aborted by user)."
             break
         }
     }
@@ -189,13 +189,32 @@ function priv_HideWarning {
 
 function priv_MailSearcher {
     # Credits: https://powershellmagazine.com/2012/11/14/pstip-how-to-get-the-email-address-of-the-currently-logged-on-user/
-    $searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
-    if ( $searcher -ne $null ) {
-        $mailAddress = $searcher.FindOne().Properties.mail
+    # $searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
+    # if ( $searcher -ne $null ) {
+    #     $mailAddress = $searcher.FindOne().Properties.mail
+    #     return $mailAddress
+    # } else {
+    #     return "notfound"
+    # }
+
+    try {
+        $searcher = [adsisearcher]"(samaccountname=$env:USERNAME)"
+        if ($searcher -ne $null) {
+            $mailAddress = $searcher.FindOne().Properties.mail
+            if ($mailAddress) {
+                return $mailAddress
+            } else {
+                return "notfound"
+            }
+        } else {
+            return "notfound"
+        }
+    } catch {
+        Write-Warning "Unable to automatically find e-mail address for current user."
+        $mailAddress = Read-Host "Specify your e-mail address"
         return $mailAddress
-    } else {
-        return "notfound"
     }
+
 }
 
 function priv_MaxLenghtSubString($string, $maxchars) {
@@ -203,6 +222,16 @@ function priv_MaxLenghtSubString($string, $maxchars) {
         return "$($string.substring(0, $maxchars))..."
     } else {
         return $string
+    }
+}
+
+function priv_RestorePreferences {
+    if ($global:PreviousInformationPreference -ne $null) {
+        Set-Variable -Name InformationPreference -Value $global:PreviousInformationPreference -Scope Global
+    }
+
+    if ($global:PreviousProgressPreference -ne $null) {
+        Set-Variable -Name ProgressPreference -Value $global:PreviousProgressPreference -Scope Global
     }
 }
 
@@ -218,6 +247,19 @@ function priv_SaveFileWithProgressiveNumber($path) {
         $count++
     }
     return $path
+}
+
+function priv_SetPreferences {
+    param (
+        [switch]$Verbose
+    )
+    $global:PreviousInformationPreference = $InformationPreference
+    $global:PreviousProgressPreference = $ProgressPreference
+    
+    if ($Verbose) {
+        Set-Variable -Name InformationPreference -Value Continue -Scope Global
+        Set-Variable -Name ProgressPreference -Value Continue -Scope Global
+    }
 }
 
 function priv_TakeDecisionOptions($message, $yes, $no, $yesHint, $noHint, $defaultOption=0) {

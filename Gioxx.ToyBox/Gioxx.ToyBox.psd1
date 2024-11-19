@@ -34,6 +34,7 @@
     "Add-MboxPermission",
     "Change-MboxLanguage",
     "Change-MFAStatus",
+    "Check-SharedMailboxCompliance",
     "Clone-OoOMessage",
     "Connect-EOL",
     "Connect-MSOnline",
@@ -86,7 +87,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = '20240924(3)'
+      Prerelease = '241031(1)'
       RequireLicenseAcceptance = $False
 
     }
