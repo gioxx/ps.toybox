@@ -4632,16 +4632,16 @@ Power Apps Per User BD Only,POWERAPPS_PER_USER_BD_ONLY,2ced8a00-3ed1-4295-ab7c-5
 Power Apps Per User BD Only,POWERAPPS_PER_USER_BD_ONLY,2ced8a00-3ed1-4295-ab7c-57170ff28e58,CDS_ POWERAPPS_PER_USER_CUSTOM,2e8dde43-6986-479d-b179-7dbe31c31f60,CDS Power Apps Per User Custom
 Power Apps Per User BD Only,POWERAPPS_PER_USER_BD_ONLY,2ced8a00-3ed1-4295-ab7c-57170ff28e58,POWERAPPS_PER_USER,ea2cf03b-ac60-46ae-9c1d-eeaeb63cec86,Power Apps per User Plan
 Power Apps Per User BD Only,POWERAPPS_PER_USER_BD_ONLY,2ced8a00-3ed1-4295-ab7c-57170ff28e58,Flow_PowerApps_PerUser,dc789ed8-0170-4b65-a415-eb77d5bb350a,Power Automate for Power Apps per User Plan
-Power Apps per user plan,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,DYN365_CDS_P2,6ea4c1ef-c259-46df-bce2-943342cd3cb2,Common Data Service - P2
-Power Apps per user plan,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,EXCHANGE_S_FOUNDATION,113feb6c-3fe4-4440-bddc-54d774bf0318,Exchange Foundation
-Power Apps per user plan,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,POWERAPPS_PER_USER,ea2cf03b-ac60-46ae-9c1d-eeaeb63cec86,Power Apps per User Plan
-Power Apps per user plan,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,Flow_PowerApps_PerUser,dc789ed8-0170-4b65-a415-eb77d5bb350a,Power Automate for Power Apps per User Plan
-Power Apps per user plan for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,CDSAICAPACITY_PERUSER,91f50f7b-2204-4803-acac-5cf5668b8b39,AI Builder capacity Per User add-on
-Power Apps per user plan for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,CDSAICAPACITY_PERUSER_NEW,74d93933-6f22-436e-9441-66d205435abb,AI Builder capacity Per User add-on
-Power Apps per user plan for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,DYN365_CDS_P2_GOV,37396c73-2203-48e6-8be1-d882dae53275,Common Data Service for Government
-Power Apps per user plan for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,EXCHANGE_S_FOUNDATION_GOV,922ba911-5694-4e99-a794-73aed9bfeec8,Exchange Foundation for Government
-Power Apps per user plan for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,POWERAPPS_PER_USER_GCC,8f55b472-f8bf-40a9-be30-e29919d4ddfe,Power Apps per User Plan for Government
-Power Apps per user plan for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,Flow_PowerApps_PerUser_GCC,8e3eb3bd-bc99-4221-81b8-8b8bc882e128,Power Automate for Power Apps per User Plan for GCC
+Power Apps Premium,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,DYN365_CDS_P2,6ea4c1ef-c259-46df-bce2-943342cd3cb2,Common Data Service - P2
+Power Apps Premium,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,EXCHANGE_S_FOUNDATION,113feb6c-3fe4-4440-bddc-54d774bf0318,Exchange Foundation
+Power Apps Premium,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,POWERAPPS_PER_USER,ea2cf03b-ac60-46ae-9c1d-eeaeb63cec86,Power Apps per User Plan
+Power Apps Premium,POWERAPPS_PER_USER,b30411f5-fea1-4a59-9ad9-3db7c7ead579,Flow_PowerApps_PerUser,dc789ed8-0170-4b65-a415-eb77d5bb350a,Power Automate for Power Apps per User Plan
+Power Apps Premium for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,CDSAICAPACITY_PERUSER,91f50f7b-2204-4803-acac-5cf5668b8b39,AI Builder capacity Per User add-on
+Power Apps Premium for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,CDSAICAPACITY_PERUSER_NEW,74d93933-6f22-436e-9441-66d205435abb,AI Builder capacity Per User add-on
+Power Apps Premium for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,DYN365_CDS_P2_GOV,37396c73-2203-48e6-8be1-d882dae53275,Common Data Service for Government
+Power Apps Premium for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,EXCHANGE_S_FOUNDATION_GOV,922ba911-5694-4e99-a794-73aed9bfeec8,Exchange Foundation for Government
+Power Apps Premium for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,POWERAPPS_PER_USER_GCC,8f55b472-f8bf-40a9-be30-e29919d4ddfe,Power Apps per User Plan for Government
+Power Apps Premium for Government,POWERAPPS_PER_USER_GCC,8e4c6baa-f2ff-4884-9c38-93785d0d7ba1,Flow_PowerApps_PerUser_GCC,8e3eb3bd-bc99-4221-81b8-8b8bc882e128,Power Automate for Power Apps per User Plan for GCC
 PowerApps Plan 1 for Government,POWERAPPS_P1_GOV,eca22b68-b31f-4e9c-a20c-4d40287bc5dd,DYN365_CDS_P1_GOV,ce361df2-f2a5-4713-953f-4050ba09aad8,Common Data Service for Government
 PowerApps Plan 1 for Government,POWERAPPS_P1_GOV,eca22b68-b31f-4e9c-a20c-4d40287bc5dd,EXCHANGE_S_FOUNDATION_GOV,922ba911-5694-4e99-a794-73aed9bfeec8,Exchange Foundation for Government
 PowerApps Plan 1 for Government,POWERAPPS_P1_GOV,eca22b68-b31f-4e9c-a20c-4d40287bc5dd,FLOW_P1_GOV,774da41c-a8b3-47c1-8322-b9c1ab68be9f,Power Automate (Plan 1) for Government
