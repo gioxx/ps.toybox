@@ -99,7 +99,7 @@ function Add-MboxPermission {
                 Deny = $addMboxPerm.Deny
               } | Out-Host
             } else {
-              Write-InformationColored "`n$($CurrentUser) already has FullAccess permission to $($SourceMailbox)" -ForegroundColor "Yellow"
+              Write-InformationColored "`n$($CurrentUser) already has FullAccess permission to $($SourceMailbox), skip." -ForegroundColor "Yellow"
             }
           }
           "SendAs" {
@@ -116,7 +116,7 @@ function Add-MboxPermission {
                 AccessRights = $addMboxPerm.AccessRights
               } | Out-Host
             } else {
-              Write-InformationColored "`n$($CurrentUser) already has SendAs permission to $($SourceMailbox)" -ForegroundColor "Yellow"
+              Write-InformationColored "`n$($CurrentUser) already has SendAs permission to $($SourceMailbox), skip." -ForegroundColor "Yellow"
             }
           }
           "SendOnBehalfTo" {
@@ -125,7 +125,7 @@ function Add-MboxPermission {
               Write-Output "`nAdd $($CurrentUser) (SendOnBehalfTo) to $($SourceMailbox) ..."
               Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{add="$($CurrentUser)"} -Confirm:$False | Out-Host
             } else {
-              Write-InformationColored "`n$($CurrentUser) already has SendOnBehalfTo permission to $($SourceMailbox)" -ForegroundColor "Yellow"
+              Write-InformationColored "`n$($CurrentUser) already has SendOnBehalfTo permission to $($SourceMailbox), skip." -ForegroundColor "Yellow"
             }
           }
           "All" {
@@ -149,7 +149,7 @@ function Add-MboxPermission {
                 Deny = $addMboxPerm.Deny
               } | Out-Host
             } else {
-              Write-InformationColored "`n$($CurrentUser) already has FullAccess permission to $($SourceMailbox)" -ForegroundColor "Yellow"
+              Write-InformationColored "`n$($CurrentUser) already has FullAccess permission to $($SourceMailbox), skip." -ForegroundColor "Yellow"
             }
 
             # SendAs
@@ -166,7 +166,7 @@ function Add-MboxPermission {
                 AccessRights = $addMboxPerm.AccessRights
               } | Out-Host
             } else {
-              Write-InformationColored "`n$($CurrentUser) already has SendAs permission to $($SourceMailbox)" -ForegroundColor "Yellow"
+              Write-InformationColored "`n$($CurrentUser) already has SendAs permission to $($SourceMailbox), skip." -ForegroundColor "Yellow"
             }
           }
         }
@@ -501,71 +501,99 @@ function Get-MboxAlias {
 function Get-MboxPermission {
   param(
     [Parameter(Mandatory=$True, ValueFromPipeline=$True, HelpMessage="Mailbox e-mail address or display name (e.g. mario.rossi@contoso.com)")]
-    [string] $SourceMailbox
+    [string] $SourceMailbox,
+    [Parameter(Mandatory=$False, HelpMessage="Include a summary of permissions counts")]
+    [switch] $IncludeSummary
   )
   
   $arr_MbxPerms = @()
+  $fullAccessCount = 0
+  $sendAsCount = 0
+  $sendOnBehalfToCount = 0
   $eolConnectedCheck = priv_CheckEOLConnection
   priv_SetPreferences -Verbose
-  
+
   if ( $eolConnectedCheck -eq $true ) {
-    
-    $MboxPermFullAccess = Get-MailboxPermission $(Get-Mailbox $SourceMailbox).PrimarySmtpAddress | Where-Object { $_.AccessRights -eq "FullAccess" -and !$_.IsInherited } | ForEach-Object {
+
+    # Controlla se la casella esiste
+    $mailbox = Get-Mailbox -Identity $SourceMailbox -ErrorAction SilentlyContinue
+    if (-not $mailbox) {
+      Write-Error "Mailbox '$SourceMailbox' not found."
+      return
+    }
+
+    $MboxPermFullAccess = Get-MailboxPermission $mailbox.PrimarySmtpAddress | Where-Object { $_.AccessRights -eq "FullAccess" -and !$_.IsInherited } | ForEach-Object {
       $UserMailbox = $_.User.ToString()
       $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
-      $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
+      $DisplayName = $(Get-User -Identity $UserMailbox -ErrorAction SilentlyContinue).DisplayName
 
-      $existingUserObject = $arr_MbxPerms | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
-      if ($existingUserObject) {
-          $existingUserObject.AccessRights += ", FullAccess"
-      } else {
-          $arr_MbxPerms += [PSCustomObject]@{
-              User = $DisplayName
-              UserMailbox = $PrimarySmtpAddress
-              AccessRights = "FullAccess"
-          }
+      if ($PrimarySmtpAddress) {
+        $existingUserObject = $arr_MbxPerms | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
+        if ($existingUserObject) {
+            $existingUserObject.AccessRights += ", FullAccess"
+        } else {
+            $arr_MbxPerms += [PSCustomObject]@{
+                User = $DisplayName
+                UserMailbox = $PrimarySmtpAddress
+                AccessRights = "FullAccess"
+            }
+            $fullAccessCount++
+        }
       }
     }
     Write-Progress -Activity "Gathered FullAccess permissions for $($SourceMailbox) ..." -Status "35% Complete" -PercentComplete 35
 
-    $MboxPermSendAs = Get-RecipientPermission $(Get-Mailbox $SourceMailbox).PrimarySmtpAddress -AccessRights SendAs | Where-Object { $_.Trustee.ToString() -ne "NT AUTHORITY\SELF" -And $_.Trustee.ToString() -notlike "S-1-5*" } | ForEach-Object {
+    $MboxPermSendAs = Get-RecipientPermission $mailbox.PrimarySmtpAddress -AccessRights SendAs -ErrorAction SilentlyContinue | Where-Object { $_.Trustee.ToString() -ne "NT AUTHORITY\SELF" -And $_.Trustee.ToString() -notlike "S-1-5*" } | ForEach-Object {
       $UserMailbox = $_.Trustee.ToString()
       $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
-      $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
+      $DisplayName = $(Get-User -Identity $UserMailbox -ErrorAction SilentlyContinue).DisplayName
 
-      $existingUserObject = $arr_MbxPerms | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
-      if ($existingUserObject) {
-        $existingUserObject.AccessRights += ", SendAs"
-      } else {
-        $arr_MbxPerms += [PSCustomObject]@{
-          User = $DisplayName
-          UserMailbox = $PrimarySmtpAddress
-          AccessRights = "SendAs"
+      if ($PrimarySmtpAddress) {
+        $existingUserObject = $arr_MbxPerms | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
+        if ($existingUserObject) {
+          $existingUserObject.AccessRights += ", SendAs"
+        } else {
+          $arr_MbxPerms += [PSCustomObject]@{
+            User = $DisplayName
+            UserMailbox = $PrimarySmtpAddress
+            AccessRights = "SendAs"
+          }
+          $sendAsCount++
         }
       }
     }
     Write-Progress -Activity "Gathered SendAs permissions for $($SourceMailbox) ..." -Status "50% Complete" -PercentComplete 50
 
-    $MboxPermSendOnBehalfTo = $(Get-Mailbox $SourceMailbox).GrantSendOnBehalfTo | ForEach-Object {
+    $MboxPermSendOnBehalfTo = $mailbox.GrantSendOnBehalfTo | ForEach-Object {
       $UserMailbox = $_
       $PrimarySmtpAddress = $(Get-Mailbox $UserMailbox -ErrorAction SilentlyContinue).PrimarySmtpAddress
-      $DisplayName = $(Get-User -Identity $UserMailbox).DisplayName
+      $DisplayName = $(Get-User -Identity $UserMailbox -ErrorAction SilentlyContinue).DisplayName
 
-      $existingUserObject = $arr_MbxPerms | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
-      if ($existingUserObject) {
-        $existingUserObject.AccessRights += ", SendOnBehalfTo"
-      } else {
-        $arr_MbxPerms += [PSCustomObject]@{
-          User = $DisplayName
-          UserMailbox = $PrimarySmtpAddress
-          AccessRights = "SendOnBehalfTo"
+      if ($PrimarySmtpAddress) {
+        $existingUserObject = $arr_MbxPerms | Where-Object { $_.UserMailbox -eq $PrimarySmtpAddress }
+        if ($existingUserObject) {
+          $existingUserObject.AccessRights += ", SendOnBehalfTo"
+        } else {
+          $arr_MbxPerms += [PSCustomObject]@{
+            User = $DisplayName
+            UserMailbox = $PrimarySmtpAddress
+            AccessRights = "SendOnBehalfTo"
+          }
+          $sendOnBehalfToCount++
         }
       }
     }
     Write-Progress -Activity "Gathered SendOnBehalfTo permissions for $($SourceMailbox) ..." -Status "90% Complete" -PercentComplete 90
 
-    Write-InformationColored "`nAccess Rights on $((Get-Mailbox $SourceMailbox).DisplayName) ($((Get-Mailbox $SourceMailbox).PrimarySmtpAddress))" -ForegroundColor "Yellow"
+    Write-InformationColored "`nAccess Rights on $($mailbox.DisplayName) ($($mailbox.PrimarySmtpAddress))" -ForegroundColor "Yellow"
     $arr_MbxPerms | Out-Host
+
+    if ($IncludeSummary) {
+      Write-Host "`nSummary of Permissions Found:" -ForegroundColor Cyan
+      Write-Host "FullAccess: $fullAccessCount" -ForegroundColor Green
+      Write-Host "SendAs: $sendAsCount" -ForegroundColor Green
+      Write-Host "SendOnBehalfTo: $sendOnBehalfToCount" -ForegroundColor Green
+    }
 
   } else {
     Write-Error "`nCan't connect or use Microsoft Exchange Online Management module. `nPlease check logs."
@@ -668,7 +696,7 @@ function Remove-MboxPermission {
         # Continue with removing permissions only if the user exists
         Switch ($AccessRights) {
           "FullAccess" { 
-            Write-Output "Removing full access for $($CurrentUser) from $($SourceMailbox) ..."
+            Write-Output "Removing Full Access for $($CurrentUser) from $($SourceMailbox) ..."
             Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False 
           }
           "SendAs" { 
@@ -680,7 +708,7 @@ function Remove-MboxPermission {
             Set-Mailbox $SourceMailbox -GrantSendOnBehalfTo @{remove="$($CurrentUser)"} -Confirm:$False 
           }
           "All" {
-            Write-Output "Removing full access for $($CurrentUser) from $($SourceMailbox) ..."
+            Write-Output "Removing Full Access for $($CurrentUser) from $($SourceMailbox) ..."
             Remove-MailboxPermission -Identity $SourceMailbox -User $CurrentUser -AccessRights FullAccess -Confirm:$False
             Write-Output "Removing SendAs for $($CurrentUser) from $($SourceMailbox) ..."
             Remove-RecipientPermission $SourceMailbox -Trustee $CurrentUser -AccessRights SendAs -Confirm:$False
