@@ -18,7 +18,7 @@
     '.\Xtras\Write-InformationColored.ps1'
   )
 
-  ModuleVersion = '0.5'
+  ModuleVersion = '0.6'
   GUID = '17aadfab-2909-411f-9266-29177b510755'
   Author = 'Gioxx'
   CompanyName = 'Gioxx.org'
@@ -37,7 +37,6 @@
     "Check-SharedMailboxCompliance",
     "Clone-OoOMessage",
     "Connect-EOL",
-    "Connect-MSOnline",
     "Export-CalendarPermission",
     "Export-DDG",
     "Export-DG",
@@ -87,7 +86,7 @@
       # ReleaseNotes of this module
       # ReleaseNotes = ''
 
-      Prerelease = '241031(1)'
+      Prerelease = '250429(1)'
       RequireLicenseAcceptance = $False
 
     }
