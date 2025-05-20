@@ -293,7 +293,7 @@ function Get-UserGroups {
         $emailAddresses = (Get-Recipient $UserPrincipalName).EmailAddresses | Where-Object { $_ -clike 'SMTP:*' }
         if ($emailAddresses.Count -le 0) {
           Write-Host "Recipient not available or not found ($($UserPrincipalName))." -f "Red"
-          break
+          return
         } elseif ($emailAddresses.Count -gt 1) {
           Write-Host "Complete e-mail address not specified, multiple e-mail addresses found:" -f "Cyan"
           $emailAddresses | ForEach-Object { Write-Host $_.Replace('SMTP:', ' ') }
@@ -306,13 +306,14 @@ function Get-UserGroups {
         }
       } catch {
         Write-Error $_.Exception.Message
+        return
       }
     }
     
     try {
       $RecipientType = (Get-Recipient $UserPrincipalName -ErrorAction SilentlyContinue).RecipientTypeDetails
       
-      if ( $RecipientType -ne $null ) {
+      if ( $null -ne $RecipientType ) {
         Switch ($RecipientType) {
           "MailContact" { 
             # If you need to analyze a MailContact you must change query in Get-MgContact instead of Get-MgUser / Get-MgContactMemberOf
@@ -336,38 +337,40 @@ function Get-UserGroups {
           }
         }
 
-        if ( $groups -ne $null ) {
-          $groups | ForEach-Object {
-            $groupIDs = $_.id
-            $otherproperties = $_.AdditionalProperties
+        Write-Host "$($RecipientType) ($($UserPrincipalName)) - Groups found: $($groups.Count)" -f "Cyan"
 
-            if (($otherproperties.groupTypes).count -eq 0) { 
-              $groupType = (Get-Recipient $otherproperties.mail).RecipientTypeDetails
-            } else { 
-              $groupType = $otherproperties.groupTypes
-            }
+        if ( $null -ne $groups ) {
+          foreach ($group in $groups) {
+            $groupIDs = $group.id
+            $otherproperties = $group.AdditionalProperties
+
+            # if (($otherproperties.groupTypes).count -eq 0) { 
+            #   $groupType = (Get-Recipient $otherproperties.mail).RecipientTypeDetails
+            # } else { 
+            #   $groupType = $otherproperties.groupTypes
+            # }
 
             if ($GridView) {
-              $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
-                "Group Name" = $otherproperties.displayName
-                "Group Description" = $otherproperties.description
-                "Group Mail" = $otherproperties.mail
+              $groupObj = [PSCustomObject]@{
+                "Group Name"          = $otherproperties.displayName
+                "Group Description"   = $otherproperties.description
+                "Group Mail"          = $otherproperties.mail
                 "Group Mail Nickname" = $otherproperties.mailNickname
-                "Group Mail Enabled" = $otherproperties.mailEnabled
-                "Group Type" = $groupType
-                "Group ID" = $groupIDs
-              })
+                "Group Mail Enabled"  = $otherproperties.mailEnabled
+                "Group ID"            = $groupIDs
+              }
             } else {
-              $groupList += New-Object -TypeName PSObject -Property $([ordered]@{ 
+              $groupObj = [PSCustomObject]@{
                 "Group Name" = $otherproperties.displayName
                 "Group Mail" = $otherproperties.mail
-                "Group Type" = $groupType
-              })
+              }
             }
+
+            $groupList += $groupObj
             
           }
           
-          if ($GridView) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList | Sort "Group Name" | Out-Host }
+          if ($GridView) { $groupList | Out-GridView -Title "M365 User Groups" } else { $groupList | Sort-Object "Group Name" | Out-Host }
         }
 
       } else {
