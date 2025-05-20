@@ -55,14 +55,12 @@
 
   FunctionsToExport = @(
     "AddMboxPermission",
-    "Connect-MSOnline",
     "MboxPermission",
     "Release-QuarantineFrom",
     "RemoveMboxPermission"
   )
   CmdletsToExport = @(
     "AddMboxPermission",
-    "Connect-MSOnline",
     "MboxPermission",
     "Release-QuarantineFrom",
     "RemoveMboxPermission"

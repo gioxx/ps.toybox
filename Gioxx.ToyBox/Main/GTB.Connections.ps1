@@ -14,18 +14,7 @@ function Connect-EOL {
   }
 }
 
-function Connect-MSOnline {
-  if ( (Get-Module -Name MSOnline -ListAvailable).count -eq 0 ) {
-    Write-Host "Install the MSOnline module using this command (then relaunch this script): `nInstall-Module MSOnline" -f "Yellow"
-  } else {
-    Import-Module MSOnline -UseWindowsPowershell
-    Connect-MsolService | Out-Null
-    Import-Module MSOnline
-  }
-}
-
 # Export Modules and Aliases =======================================================================================================================================
 
 Export-ModuleMember -Alias *
 Export-ModuleMember -Function "Connect-EOL"
-Export-ModuleMember -Function "Connect-MSOnline"
