@@ -1,79 +1,59 @@
-# Original source: https://petri.com/more-efficient-powershell-with-psreadline/
-Set-PSReadLineKeyHandler -Key F7 -BriefDescription HistoryList -Description "Shows history and allows searching" -ScriptBlock {
-    $historyPath = (Get-PSReadlineOption).HistorySavePath
-    if (-not (Test-Path $historyPath)) {
-        return
+# Source: https://petri.com/more-efficient-powershell-with-psreadline/
+Set-PSReadlineKeyHandler -Key F7 -BriefDescription HistoryList -Description "Show command history with Out-Gridview. [$($env:username)]" -ScriptBlock {
+    $pattern = $null
+    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$pattern, [ref]$null)
+    if ($pattern) {
+        $pattern = [regex]::Escape($pattern)
     }
-
-    # Reads history, removes consecutive duplicates and shows only rows with text
-    $history = Get-Content $historyPath | Where-Object { $_ -match '\S' } | Get-Unique
-
-    if ($history) {
-        # Asks the user to enter a search term and filters the history
-        $searchTerm = Read-Host "Enter a keyword to filter the history (leave blank to show everything)"
-        if ($searchTerm) {
-            $filteredHistory = $history | Where-Object { $_ -match [regex]::Escape($searchTerm) }
-        } else {
-            $filteredHistory = $history
+    $history = [System.Collections.ArrayList]@(
+        $last = ''
+        $lines = ''
+        foreach ($line in [System.IO.File]::ReadLines((Get-PSReadlineOption).HistorySavePath)) {
+            if ($line.EndsWith('`')) {
+                $line = $line.Substring(0, $line.Length - 1)
+                $lines = if ($lines) {
+                    "$lines`n$line"
+                } else {
+                    $line
+                }
+                continue
+            }
+            if ($lines) {
+                $line = "$lines`n$line"
+                $lines = ''
+            }
+            if (($line -cne $last) -and (!$pattern -or ($line -match $pattern))) {
+                $last = $line
+                $line
+            }
         }
-
-        if (-not $filteredHistory -or $filteredHistory.Count -eq 0) {
-            Write-Host "No command found with '$searchTerm'."
-            return
-        }
-
-        # Shows the filtered history and asks the user to choose a command
-        $indexedHistory = $filteredHistory | ForEach-Object -Begin { $i = 1 } -Process { "$i. $_"; $i++ }
-        $indexedHistory | Out-Host
-        $selectionIndex = Read-Host "Choose a command to execute (1-$($filteredHistory.Count))"
-
-        # Checks whether the input is valid
-        if ($selectionIndex -match '^\d+$' -and [int]$selectionIndex -gt 0 -and [int]$selectionIndex -le $filteredHistory.Count) {
-            $command = $filteredHistory[[int]$selectionIndex - 1]
-            [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($command)
-        } else {
-            Write-Host "Invalid selection."
-        }
+    )
+    $history.Reverse()
+    $command = $history | Select-Object -unique | Out-GridView -Title "PSReadline History - Select a command to insert at the prompt" -OutputMode Single
+    if ($command) {
+        [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+        [Microsoft.PowerShell.PSConsoleReadLine]::Insert(($command -join "`n"))
     }
 }
 
 # Credits
 # https://www.sharepointdiary.com/2020/04/powershell-generate-random-password.html
-# Modified to include a "less complex" version upon request.
-# Utilization examples:
-# Get-RandomPassword -PasswordLength 12                          -> One complex password
-# Get-RandomPassword -PasswordLength 12 -Simple                  -> One simplified password
-# Get-RandomPassword -PasswordLength 12 -Count 5                 -> Five complex passwords
-# Get-RandomPassword -PasswordLength 12 -Simple -Count 3         -> Three simplified passwords
-# Get-RandomPassword -PasswordLength 12 -Count 5 | Set-Clipboard -> Five complex passwords copied to clipboard
 Function Get-RandomPassword {
-    param(
-        [Parameter(ValueFromPipeline = $false)]
-        [ValidateRange(1, 256)]
-        [int]$PasswordLength = 10,
-        [switch]$Simple,
-        [int]$Count = 1
-    )
-
-    if ($Simple) {
-        $AllowedSpecialChars = [char[]]'!,.@#$_-'
-    } else {
-        $AllowedSpecialChars = [char[]](33..47 + 58..64 + 91..96 + 123..126)
-    }
-
+    #define parameters
+    param([Parameter(ValueFromPipeline=$false)][ValidateRange(1,256)][int]$PasswordLength = 10)
+ 
+    #ASCII Character set for Password
     $CharacterSet = @{
-        Lowercase   = (97..122) | Get-Random -Count 10 | % { [char]$_ }
-        Uppercase   = (65..90)  | Get-Random -Count 10 | % { [char]$_ }
-        Numeric     = (48..57)  | Get-Random -Count 10 | % { [char]$_ }
-        SpecialChar = ($AllowedSpecialChars) | Get-Random -Count 10
+        Lowercase   = (97..122) | Get-Random -Count 10 | % {[char]$_}
+        Uppercase   = (65..90)  | Get-Random -Count 10 | % {[char]$_}
+        Numeric     = (48..57)  | Get-Random -Count 10 | % {[char]$_}
+        SpecialChar = (33..47)+(58..64)+(91..96)+(123..126) | Get-Random -Count 10 | % {[char]$_}
     }
-
+ 
+    #Frame Random Password from given character set
     $StringSet = $CharacterSet.Uppercase + $CharacterSet.Lowercase + $CharacterSet.Numeric + $CharacterSet.SpecialChar
-
-    for ($i = 0; $i -lt $Count; $i++) {
-        -join (Get-Random -Count $PasswordLength -InputObject $StringSet)
-    }
+ 
+    -join(Get-Random -Count $PasswordLength -InputObject $StringSet)
 }
 
 # Credits
